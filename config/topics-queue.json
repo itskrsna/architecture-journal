@@ -3,7 +3,6 @@
   "queue": {
     "architecture": [
       "C4 model pitfalls at the container level: where teams stop diagramming too early",
-      "What actually belongs in an architecture decision record (and what doesn't)",
       "The difference between a design review and a rubber stamp",
       "Trade-off tables vs prose: how to actually document a hard architecture call",
       "When to introduce a new bounded context vs extend an existing one"
