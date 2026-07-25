@@ -1,0 +1,43 @@
+{
+  "_readme": "queue: topics not yet drafted, grouped by pillar. pending: {review_id, title, pillar} popped from queue the moment a draft's PR is opened -- lets the merge/reject handler update status without needing to re-read a possibly-deleted branch. used: moved here from pending on PR merge, with devto url + date. rejected: moved here from pending on PR close-without-merge, with any PR feedback text, so future drafts avoid the same miss. When a pillar's queue drops below 3 items, the daily drafting run generates 5 more for that pillar, checked against 'used' and 'rejected' titles before adding.",
+  "queue": {
+    "architecture": [
+      "C4 model pitfalls at the container level: where teams stop diagramming too early",
+      "What actually belongs in an architecture decision record (and what doesn't)",
+      "The difference between a design review and a rubber stamp",
+      "Trade-off tables vs prose: how to actually document a hard architecture call",
+      "When to introduce a new bounded context vs extend an existing one"
+    ],
+    "devops_cloud": [
+      "The CI/CD pipeline smell: too many manual approval gates",
+      "What breaks first when you move from one cluster to multi-cluster Kubernetes",
+      "Infrastructure as code drift: catching it before it catches you",
+      "Observability that gets used vs observability that gets dashboards nobody opens",
+      "Blue-green vs canary: picking based on your actual failure modes, not the trend"
+    ],
+    "azure": [
+      "Azure landing zone patterns for multi-team orgs past the 20-team mark",
+      "Azure Well-Architected Framework: which pillar gets ignored first under deadline pressure",
+      "Subscription-per-team vs subscription-per-environment: the trade-off nobody states plainly",
+      "Cost governance in Azure: tagging policy vs actual accountability",
+      "Choosing between Azure Functions, App Service, and AKS for a new service"
+    ],
+    "dotnet": [
+      ".NET Core minimal APIs vs controllers in 2026: when controllers still win",
+      "Migrating a legacy .NET Framework service without a big-bang rewrite",
+      "Performance regressions in .NET Core that only show up under real load",
+      "Dependency injection patterns that make .NET Core services harder to test, not easier",
+      "What a .NET Core service needs before it's actually production-ready"
+    ],
+    "node_python": [
+      "Node.js backend patterns for high-throughput services under real concurrency",
+      "Python vs Node.js for a new backend service: the criteria that actually matter",
+      "API versioning strategies that survive more than one breaking change",
+      "What a cloud architect actually reviews in a backend design doc",
+      "Async patterns in Node.js that quietly become a debugging nightmare"
+    ]
+  },
+  "pending": [],
+  "used": [],
+  "rejected": []
+}

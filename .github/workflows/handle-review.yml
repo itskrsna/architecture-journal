@@ -1,0 +1,62 @@
+name: Handle article review decision
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  handle-decision:
+    if: startsWith(github.event.pull_request.head.ref, 'draft/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Reconcile topics queue + publish if merged
+        id: reconcile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          DEVTO_LIVE: ${{ vars.DEVTO_LIVE }}
+        run: npx tsx scripts/handle-pr-close.ts
+
+      - name: Commit reconciliation
+        run: |
+          git config user.name "article-pipeline-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add config/topics-queue.json drafts published
+          git diff --cached --quiet || git commit -m "Reconcile review decision for ${{ github.event.pull_request.head.ref }}"
+          git push origin main
+
+      - name: Comment dev.to URL on the PR
+        if: steps.reconcile.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "Published: ${{ steps.reconcile.outputs.devto_url }}"
+
+      - name: Delete the draft branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin --delete "${{ github.event.pull_request.head.ref }}" || true

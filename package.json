@@ -1,0 +1,21 @@
+{
+  "name": "tech-articles-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Daily automated tech-article drafting, PR-based approval, and dev.to publishing pipeline",
+  "type": "commonjs",
+  "scripts": {
+    "devto-publish": "tsx scripts/devto-publish.ts",
+    "handle-pr-close": "tsx scripts/handle-pr-close.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
+  }
+}
