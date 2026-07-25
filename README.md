@@ -9,7 +9,10 @@ the PR yourself.
 1. **Add a dated bullet to `config/experience-log.md`** under `## Unused`, starting with
    today's date (`2026-07-26: ...`). This is required — **no entry dated today means no
    article gets drafted that day, on purpose.** Jot down anything real: a decision, an
-   incident, a number that surprised you, a debate you had. Don't polish it.
+   incident, a number that surprised you, a debate you had. Don't polish it. Feel free to log
+   more than one thing a day, or nothing on days you skip — extras just wait until they're
+   the best fit for a future topic. **You never need to delete old entries**; once one gets
+   used it's moved to `## Referenced` automatically.
 2. **Each day at 6:00 AM IST**, a Claude Code cloud routine reads that entry, drafts an
    article grounded in it, and opens a PR on GitHub.
 3. **Review the PR** — from GitHub's web UI, mobile app, or email notification, from
