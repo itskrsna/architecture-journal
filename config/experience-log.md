@@ -7,12 +7,18 @@ polish it, don't tie it to a pillar, don't wait for the "right" moment — just 
 
 **How to add an entry**: edit this file directly on GitHub (the pencil "Edit this file" icon
 on github.com, or the GitHub mobile app), or edit it locally if you're at your laptop. Add a
-new bullet under `## Unused`, dated. That's it — the next drafting run will pick it up.
+new bullet under `## Unused`, starting with today's date (`YYYY-MM-DD: ...`).
 
-Each day, the drafting routine reads this file, picks whichever `## Unused` entry best fits
-that day's pillar (or is just the most interesting/timely), grounds the article in it, and
-moves it to `## Referenced` with the review_id it was used for — so the same anecdote doesn't
-get reused every day, but stays available if it's a strong fit again later.
+**Hard gate: no entry dated today = no article today.** The daily drafting routine checks
+`## Unused` for a bullet dated with the current date before doing anything else. If none
+exists, it skips the entire run — no topic popped from the queue, no draft, no PR — and just
+reports that it skipped. This is deliberate: it forces every article to be grounded in
+something you actually logged that day, rather than falling back to generic filler on days
+you didn't add anything.
+
+When a matching entry exists, the routine picks whichever of today's dated entries best fits
+that day's pillar, grounds the article in it, and moves it to `## Referenced` with the
+review_id it was used for.
 
 ## Unused
 
