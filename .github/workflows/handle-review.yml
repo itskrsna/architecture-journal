@@ -33,6 +33,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_MERGED: ${{ github.event.pull_request.merged }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
           DEVTO_LIVE: ${{ vars.DEVTO_LIVE }}
         run: npx tsx scripts/handle-pr-close.ts
