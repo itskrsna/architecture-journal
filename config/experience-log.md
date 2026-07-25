@@ -12,13 +12,15 @@ new bullet under `## Unused`, starting with today's date (`YYYY-MM-DD: ...`).
 **Hard gate: no entry dated today = no article today.** The daily drafting routine checks
 `## Unused` for a bullet dated with the current date before doing anything else. If none
 exists, it skips the entire run — no topic popped from the queue, no draft, no PR — and just
-reports that it skipped. This is deliberate: it forces every article to be grounded in
-something you actually logged that day, rather than falling back to generic filler on days
-you didn't add anything.
+reports that it skipped. This is deliberate: it forces you to actually engage that day, rather
+than the routine falling back to generic filler.
 
-When a matching entry exists, the routine picks whichever of today's dated entries best fits
-that day's pillar, grounds the article in it, and moves it to `## Referenced` with the
-review_id it was used for.
+That gate only decides *whether* today's run happens — it doesn't restrict *which* entry gets
+used. Once unlocked, the routine considers everything still sitting in `## Unused`, today's or
+older, and picks whichever single entry best fits that day's topic. So: **you never need to
+delete anything yourself.** Log as much as you want on any given day — extras that don't get
+picked simply wait their turn and get used whenever they're the best fit, then move to
+`## Referenced` automatically. Nothing goes stale, nothing needs manual cleanup.
 
 ## Unused
 
