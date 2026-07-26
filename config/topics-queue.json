@@ -42,6 +42,13 @@
       "pillar": "architecture",
       "url": "https://dev.to/webruster/what-actually-belongs-in-an-architecture-decision-record-and-what-doesnt-3714-temp-slug-4734122",
       "published_date": "2026-07-25"
+    },
+    {
+      "review_id": "2026-07-26-hotfix-cherry-pick-smell",
+      "title": "Cherry-picking your hotfix twice is the real pipeline smell",
+      "pillar": "devops_cloud",
+      "url": "https://dev.to/webruster/cherry-picking-your-hotfix-twice-is-the-real-pipeline-smell-534o-temp-slug-191212",
+      "published_date": "2026-07-26"
     }
   ],
   "rejected": []
