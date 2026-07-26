@@ -8,7 +8,6 @@
       "When to introduce a new bounded context vs extend an existing one"
     ],
     "devops_cloud": [
-      "The CI/CD pipeline smell: too many manual approval gates",
       "What breaks first when you move from one cluster to multi-cluster Kubernetes",
       "Infrastructure as code drift: catching it before it catches you",
       "Observability that gets used vs observability that gets dashboards nobody opens",
