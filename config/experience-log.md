@@ -36,7 +36,7 @@ picked simply wait their turn and get used whenever they're the best fit, then m
 *(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
 2026-07-26-bounded-context-when")*
 
-2026-07-26: created branching strategy and  multiple azure environments on the fly so the building product can be be fast phased — used in 2026-07-27-subscription-per-environment-question
+2026-07-29: created branching strategy and  multiple azure environments on the fly so the building product can be be fast phased — used in 2026-07-27-subscription-per-environment-question
 
 2026-07-28: gitflow release strategy: i have built pipeline and from develop to release on this build pipeline runs and with same artifact we will release to different environment, (dev,qa,sit,uat,prod)  and after succesfull deployment of release we tag the particular release after merginng from release to main, now any issue comes in the production, we raise branch from tag as hot fix and creates pr to Release and deploy to the UAT slot as hot fix after testing we will toggle the slot, we are cherry picking the hotfix and merging into the develop and to the main branch and updating the tag, the point here is that how to release the hotfix from release branch?
 release have untested code so we release directly from hotfix branch itself and we have some more scenarios where we documented the approach — used in 2026-07-26-hotfix-cherry-pick-smell
