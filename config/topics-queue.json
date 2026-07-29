@@ -54,6 +54,13 @@
       "pillar": "azure",
       "url": "https://dev.to/webruster/subscription-per-environment-was-never-the-real-question-5ape-temp-slug-6100150",
       "published_date": "2026-07-27"
+    },
+    {
+      "review_id": "2026-07-29-net-core-production-ready",
+      "title": "What a .NET Core service needs before it's actually production-ready",
+      "pillar": "dotnet",
+      "url": "https://dev.to/webruster/what-a-net-core-service-needs-before-its-actually-production-ready-169a-temp-slug-4511407",
+      "published_date": "2026-07-29"
     }
   ],
   "rejected": []
