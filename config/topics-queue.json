@@ -23,8 +23,7 @@
       ".NET Core minimal APIs vs controllers in 2026: when controllers still win",
       "Migrating a legacy .NET Framework service without a big-bang rewrite",
       "Performance regressions in .NET Core that only show up under real load",
-      "Dependency injection patterns that make .NET Core services harder to test, not easier",
-      "What a .NET Core service needs before it's actually production-ready"
+      "Dependency injection patterns that make .NET Core services harder to test, not easier"
     ],
     "node_python": [
       "Node.js backend patterns for high-throughput services under real concurrency",
