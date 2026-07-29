@@ -28,6 +28,9 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   teammate over whether a new reporting service should be its own bounded context or bolted
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
+  
+  2026-07-30: The error is a classic APIM named-value uniqueness conflict, not a pipeline/script bug:"Property with the same name already exist." (target: "name")
+  APIM named values have two identifiers:- id — the resource ID (what apiops derives from your artifact folder name)- name — the display name property inside the resource, which APIM enforces must be unique across the whole service, independent of id This error means: in one environment, there is already a named value (created earlier — likely manually via portal, or under a different id/folder) whose name property is key1, but its id differs from the id the publisher is trying to PUT. APIM refuses the write because you'd end up with two different named values sharing the same name.
 
 ## Referenced
 
