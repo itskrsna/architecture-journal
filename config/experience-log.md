@@ -28,9 +28,6 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   teammate over whether a new reporting service should be its own bounded context or bolted
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
-  
-  2026-07-30: The error is a classic APIM named-value uniqueness conflict, not a pipeline/script bug:"Property with the same name already exist." (target: "name")
-  APIM named values have two identifiers:- id — the resource ID (what apiops derives from your artifact folder name)- name — the display name property inside the resource, which APIM enforces must be unique across the whole service, independent of id This error means: in one environment, there is already a named value (created earlier — likely manually via portal, or under a different id/folder) whose name property is key1, but its id differs from the id the publisher is trying to PUT. APIM refuses the write because you'd end up with two different named values sharing the same name.
 
 ## Referenced
 
@@ -43,3 +40,6 @@ picked simply wait their turn and get used whenever they're the best fit, then m
 release have untested code so we release directly from hotfix branch itself and we have some more scenarios where we documented the approach — used in 2026-07-26-hotfix-cherry-pick-smell
 
 2026-07-29: nuget package implementation of domain projects and pushing to private artifactory and using custom dependent bot to bump the version and releasing to the microservice repos — used in 2026-07-29-net-core-production-ready
+
+2026-07-30: The error is a classic APIM named-value uniqueness conflict, not a pipeline/script bug:"Property with the same name already exist." (target: "name")
+  APIM named values have two identifiers:- id — the resource ID (what apiops derives from your artifact folder name)- name — the display name property inside the resource, which APIM enforces must be unique across the whole service, independent of id This error means: in one environment, there is already a named value (created earlier — likely manually via portal, or under a different id/folder) whose name property is key1, but its id differs from the id the publisher is trying to PUT. APIM refuses the write because you'd end up with two different named values sharing the same name. — used in 2026-07-30-design-review-naming-collision
