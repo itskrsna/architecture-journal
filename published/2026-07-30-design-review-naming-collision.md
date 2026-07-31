@@ -1,4 +1,6 @@
 ---
+devto_url: "https://dev.to/webruster/the-one-design-review-question-that-would-have-caught-our-apim-naming-collision-2onl-temp-slug-3272562"
+published_date: "2026-07-31"
 title: "The one design-review question that would have caught our APIM naming collision"
 pillar: node_python
 tags: [node, python, backend]
