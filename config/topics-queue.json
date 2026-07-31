@@ -29,7 +29,6 @@
       "Node.js backend patterns for high-throughput services under real concurrency",
       "Python vs Node.js for a new backend service: the criteria that actually matter",
       "API versioning strategies that survive more than one breaking change",
-      "What a cloud architect actually reviews in a backend design doc",
       "Async patterns in Node.js that quietly become a debugging nightmare"
     ]
   },
