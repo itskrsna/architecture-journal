@@ -28,6 +28,62 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   teammate over whether a new reporting service should be its own bounded context or bolted
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
+  2026-08-11: Distributed Tracing with OpenTelemetry: A single user action in ALSC — for example, uploading an EPCIS batch file — fans out into many independent executions: a browser request, a Node.js Function, a blob write, a Service Bus message, a .NET Function, a Hangfire background job, and several more Service Bus hops. Each of these already produces its own logs. The problem distributed tracing solves is not "do we have enough logs" — it is "can we prove which logs, across which services, belong to the same end-user action."
+Three practical outcomes motivated this work for ALSC specifically:
+●	Faster incident response. A support ticket referencing a failed batch can be resolved by pulling one trace ID's full path through Application Map, instead of asking four different teams to search their own logs around a rough timestamp.
+●	Visibility into a genuinely non-obvious hop. Hangfire's Redis-backed queue does not carry any request context by default — a job dequeued by the Hangfire server has no idea which upload triggered it unless that link is captured explicitly. Distributed tracing forces this link to be made explicit in code, rather than left as an assumption.
+●	Safe cost control. Because trace volume maps directly to Application Insights ingestion cost, the platform needed the ability to turn tracing on only when investigating an incident, without redeploying every service. (Part X covers this in full.)
+
+2026-08-12:  # Field Validation Framework 
+
+A generic, pluggable field-level validation engine for React forms in this app. It is **not**
+a restricted-character or max-length tool specifically — those are just two of the rule kinds
+it understands. New rule kinds are added without touching any page that already uses it.
+
+Files:
+- `src/utils/fieldValidation.ts` — the rule registry + pure validator functions (`validateFieldValue`, `resolveSanitizer`, presets).
+- `src/customhooks/useFieldValidation.ts` — the React hook any page imports to get `errors`, `sanitizeOnChange`, `validateField`, `validateAll`, `isAllValid`, `clearError`. Lives in `customhooks/` (not `utils/`) alongside `useDebounce.tsx` — this codebase's convention for reusable, non-page-specific hooks.
+
+## 1. What this is
+
+Each form defines a `Record<string, FieldRule>` — one entry per field it wants validated — and
+passes it to `useFieldValidation(rules)`. The hook gives back everything needed to wire live
+sanitization (e.g. stripping disallowed characters as the user types), blur-time error display,
+and a submit-time gate, without writing new regex/validation logic by hand for each field.
+
+## 2. Rule kinds reference
+
+| Key | Shape | What it does |
+|---|---|---|
+| `required` | `boolean \| { message }` | Value must be non-blank (after `.trim()`). |
+| `minLength` | `number \| { value, message }` | Value must be at least N characters. |
+| `maxLength` | `number \| { value, message }` | Value must be at most N characters. |
+| `pattern` | `{ regex, message }` | Value **must match** the regex (e.g. digits-only). |
+| `forbiddenPattern` | `{ regex, message }` | Value **must not match** the regex. |
+| `restrictedChars` | `boolean \| { chars, message? }` | Preset built on `forbiddenPattern` for "these specific characters are not allowed." `true` defaults to `\`, `'`, `"`. Also drives live-stripping via `sanitizeOnChange` (see below). |
+| `numeric` | `boolean \| { message }` | Value must be digits only. |
+| `email` | `boolean \| { message }` | Value must look like an email address. |
+| `custom` | `(value, ctx) => string \| null` or an array of these | Escape hatch for anything not covered, including cross-field rules via `ctx.allValues`. |
+| `sanitize` | `(raw: string) => string` | Explicit live-transform run on every keystroke/paste via `sanitizeOnChange`. Wins over the `restrictedChars` preset if both are present. |
+
+Example:
+```ts
+const rules: Record<string, FieldRule> = {
+  productName: { required: true, restrictedChars: true, maxLength: 100 },
+  hostAddress: { pattern: { regex: HOST_REGEX, message: 'Enter a valid host or IP.' } },
+  confirmPassword: { custom: (value, ctx) => (value !== ctx?.allValues?.password ? 'Passwords do not match.' : null) }
+};
+```
+
+## 3. The repeatable recipe
+
+1. Add one entry to your page's `Record<string, FieldRule>` config.
+2. In the field's change handler, run the raw value through `sanitizeOnChange(name, rawValue, allValues)` before calling `setState`. This gives "strip disallowed characters as you type" for any rule with a `sanitize`/`restrictedChars` preset; it's a pass-through for everything else.
+3. Wire the field's blur handler to call `validateField(name, value, allValues)` — reuse your page's existing blur dispatcher if it has one (see FAQ) rather than adding a second one.
+4. Pass `errorMessage={errors[name]}` and `isInvalid={!!errors[name]}` into `CustomFormLabelAndInput` (or your input component) for that field. No changes to the input component are needed — it already supports these two optional props.
+5. Wherever your page currently decides whether Submit/Next is enabled, call `validateAll(currentValues, allValues)` for the ruled fields instead of writing a new bespoke check next to it.
+6. If you need a rule kind that isn't in the table above, reach for `custom` first. Only add a new named preset to `fieldValidation.ts`'s rule registry once the same logic is needed in 2+ places — this keeps the engine's surface small and demand-driven.
+
 
 ## Referenced
 
