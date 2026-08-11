@@ -5,13 +5,11 @@
   "description": "Daily automated tech-article drafting, PR-based approval, and dev.to publishing pipeline",
   "type": "commonjs",
   "scripts": {
-    "draft-article": "tsx scripts/draft-article.ts",
     "devto-publish": "tsx scripts/devto-publish.ts",
     "handle-pr-close": "tsx scripts/handle-pr-close.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.116.0",
     "dotenv": "^16.4.5",
     "gray-matter": "^4.0.3"
   },
