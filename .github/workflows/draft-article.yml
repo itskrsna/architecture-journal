@@ -1,0 +1,67 @@
+name: Draft daily article
+
+# Replaces the Claude Code cloud routine described in CLAUDE.md — that routine's git push
+# stopped working when Claude Code's cloud-session GitHub egress proxy started requiring a
+# linked GitHub connector, which this workspace doesn't have. Running the same drafting logic
+# as a plain GitHub Action sidesteps that entirely: this job authenticates with its own
+# GITHUB_TOKEN, the same way handle-review.yml already does, and needs no Claude Code
+# involvement at all — only a directly-purchased ANTHROPIC_API_KEY secret.
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # 12:00 UTC daily — adjust to taste
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Draft today's article
+        id: draft
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npx tsx scripts/draft-article.ts
+
+      - name: Open the review PR
+        if: steps.draft.outputs.drafted == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "architecture-journal-bot"
+          git config user.email "articles-bot@users.noreply.github.com"
+
+          BRANCH="draft/${{ steps.draft.outputs.review_id }}"
+          git checkout -b "$BRANCH"
+          git add config/topics-queue.json config/experience-log.md \
+            "drafts/${{ steps.draft.outputs.review_id }}.md"
+          git commit -m "Draft: ${{ steps.draft.outputs.title }}"
+          git push -u origin "$BRANCH"
+
+          gh pr create \
+            --repo "${{ github.repository }}" \
+            --base main \
+            --head "$BRANCH" \
+            --title "${{ steps.draft.outputs.title }}" \
+            --body "$(cat <<EOF
+          Pillar: ${{ steps.draft.outputs.pillar }}
+          Tags: ${{ steps.draft.outputs.tags }}
+          Word count: ~${{ steps.draft.outputs.word_count }}
+
+          Merge this PR to publish it to dev.to. Close it without merging to reject — leave a comment explaining why if you want future drafts to account for it.
+          EOF
+          )"

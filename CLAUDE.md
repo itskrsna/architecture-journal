@@ -10,40 +10,53 @@ Azure, .NET Core, Node.js/Python, DevOps). Drafts one article a day grounded in 
 experience note the owner logs, opens a GitHub PR for review, publishes approved ones to
 dev.to. Built in a single extended Claude Code session on 2026-07-25.
 
-## Execution architecture (important — split across two systems)
+## Execution architecture
 
-1. **Drafting + opening the PR** runs as a **Claude Code cloud routine** (`RemoteTrigger`,
-   trigger id `trig_01JS86HJCYYUFuB7T9UEvqGP`), not as code in this repo. Its full prompt is
-   stored server-side as part of the routine config, not in any file here — **to change
-   drafting behavior, update the routine via the `RemoteTrigger` tool or the `schedule` skill,
-   not by editing a script in this repo.** Fetch its current config with
-   `RemoteTrigger({action: "get", trigger_id: "trig_01JS86HJCYYUFuB7T9UEvqGP"})` before editing
-   it blind.
-2. **Reacting to the PR closing** (publish on merge, log feedback on reject) runs as a
-   **GitHub Actions workflow** (`.github/workflows/handle-review.yml`), triggered on
-   `pull_request: closed`. This part *is* real code in this repo
-   (`scripts/devto-publish.ts`, `scripts/handle-pr-close.ts`).
+Both halves now run as plain **GitHub Actions workflows** — no Claude Code involvement at
+runtime, and no GitHub connector of any kind:
 
-This split exists because: (a) GitHub connection for Claude Code cloud routines turned out to
-be gated behind org-admin approval on the owner's Team account, with no self-serve option and
-no admin willing/available to grant it — so the routine authenticates via a **fine-grained
-GitHub PAT embedded directly in its own stored prompt** instead of the normal `sources:
-git_repository` OAuth mechanism (which would have required that gated connection). The PAT is
-scoped to only this repo (Contents + Pull requests, read/write) to minimize blast radius —
-this was a deliberate, user-approved trade-off against a proper secrets vault, not an
-oversight. (b) The owner explicitly declined to pay for direct Anthropic API access, which
-ruled out doing the drafting step as a GitHub Action too — hence the split rather than
-everything living in Actions.
+1. **Drafting + opening the PR**: `.github/workflows/draft-article.yml`, on a daily
+   `schedule` (plus `workflow_dispatch` for manual runs). It runs `scripts/draft-article.ts`,
+   which calls the Anthropic API directly (`@anthropic-ai/sdk`, model `claude-opus-5`) to plan,
+   draft, and self-review the article, then writes the config updates and draft file. The
+   workflow step after it does the git add/commit/push and `gh pr create`, using the job's own
+   `GITHUB_TOKEN` (granted `contents: write` + `pull-requests: write` at the workflow level).
+2. **Reacting to the PR closing** (publish on merge, log feedback on reject):
+   `.github/workflows/handle-review.yml`, triggered on `pull_request: closed`
+   (`scripts/devto-publish.ts`, `scripts/handle-pr-close.ts`) — unchanged.
+
+Requires one repo secret: `ANTHROPIC_API_KEY` (Settings → Secrets and variables → Actions).
+This is a **separate Anthropic Console account/billing relationship from any Claude
+subscription** — pay-as-you-go per token, roughly $0.30–0.80 per drafting run at
+`claude-opus-5` / `effort: high` (see the cost note in Known trade-offs below). Drop to
+`effort: medium` in `draft-article.ts` if that's too much for a personal project.
+
+### History — why this used to be split across two systems
+
+Until 2026-08, drafting ran as a **Claude Code cloud routine** (trigger id
+`trig_01JS86HJCYYUFuB7T9UEvqGP`) instead of an Action, because GitHub connection for Claude
+Code cloud routines turned out to be gated behind org-admin approval on the owner's Team
+account, with no self-serve option — so the routine authenticated via a **fine-grained GitHub
+PAT embedded directly in its own stored prompt** instead of the normal `sources:
+git_repository` OAuth mechanism. That PAT-based `git push` worked for about a week (see
+`topics-queue.json`'s early `used` entries), then stopped: a proxy change on Claude Code's
+side started requiring cloud sessions to authenticate GitHub access through a linked
+connector regardless of any embedded credential, and this workspace never had one. Moving
+drafting into a GitHub Action sidesteps the whole problem — Actions already has native,
+unrestricted repo access via `GITHUB_TOKEN` — at the cost of the direct Anthropic API spend
+above, which the owner had originally declined but reconsidered once the routine broke.
+**The old routine should be disabled** (it can't push anyway, but leaving it enabled risks a
+duplicate/conflicting draft if GitHub connectors ever become available on this account) —
+disable or delete it via the Claude Code web UI or the `schedule` skill.
 
 ## The hard gate (deliberate, not a bug)
 
-The routine's step 0 checks `config/experience-log.md`'s `## Unused` section for a bullet
-dated with the current date. If none exists, it stops immediately — no topic popped from
-`topics-queue.json`, no draft, no PR, just a "skipped" report. This exists because the first
-real draft scored 81% on an AI-detection tool; the root cause was the routine falling back to
-generic prose when it had no real specifics to ground the article in. Forcing a same-day
-experience-log entry is the fix. Do not remove this gate without addressing that root cause
-some other way.
+`draft-article.ts`'s first step checks `config/experience-log.md`'s `## Unused` section for a
+bullet dated with the current date. If none exists, it stops immediately — no topic popped
+from `topics-queue.json`, no draft, no PR, just a "Skipped" log line. This exists because the
+first real draft scored 81% on an AI-detection tool; the root cause was generic prose from
+having no real specifics to ground the article in. Forcing a same-day experience-log entry is
+the fix. Do not remove this gate without addressing that root cause some other way.
 
 ## Conventions
 
@@ -54,7 +67,7 @@ some other way.
 - Front-matter schema (`title`, `pillar`, `tags`, `review_id`, `date`) is documented in
   `profile.md`'s "Draft file format" section and parsed by `gray-matter` in
   `scripts/devto-publish.ts`. Keep the two in sync if either changes.
-- Automated commits (both from the routine and from the Actions workflow) use a bot identity
+- Automated commits (from both Actions workflows) use a bot identity
   (`architecture-journal-bot` / `articles-bot@users.noreply.github.com`), not the repo owner's
   personal identity.
 - **This repo's local git identity is intentionally `imwebruster@gmail.com`**, not whatever
@@ -62,13 +75,19 @@ some other way.
   override. Do not let a global config leak back in; check `git config user.email` (no
   `--global`) before committing here if anything looks off.
 - `topics-queue.json`'s `used`/`rejected` arrays are populated only by
-  `scripts/handle-pr-close.ts` (on PR merge/close), never by the drafting routine directly —
-  the routine only ever pops from `queue` and appends to `experience-log.md`'s `Referenced`
-  section. Rejected-PR metadata is fetched from the GitHub Contents API at the PR's head SHA
-  (not from the working tree), because a rejected draft's file never reaches `main`.
+  `scripts/handle-pr-close.ts` (on PR merge/close), never by `draft-article.ts` directly — it
+  only ever pops from `queue` and appends to `experience-log.md`'s `Referenced` section.
+  Rejected-PR metadata is fetched from the GitHub Contents API at the PR's head SHA (not from
+  the working tree), because a rejected draft's file never reaches `main`.
 
 ## Known trade-offs / things to revisit
 
+- **Anthropic API cost**: `draft-article.ts` runs ~4-5 `claude-opus-5` calls per drafting run
+  (plan → draft → banned-phrase pass → detector pass → originality check), each at
+  `effort: high` with thinking on by default. Rough estimate ~$0.30-0.80/day, ~$10-25/month —
+  billed to whatever payment method is on the Anthropic Console account tied to
+  `ANTHROPIC_API_KEY`, separate from any Claude subscription. Drop `effort` to `medium` in the
+  script if this needs to be cheaper.
 - `DEVTO_LIVE` (Actions repo variable) is `false` — merges currently publish as **private**
   dev.to drafts, not public. Flip to `true` once satisfied with quality.
 - No paid plagiarism/AI-detection API is used, by the owner's choice — originality relies on
