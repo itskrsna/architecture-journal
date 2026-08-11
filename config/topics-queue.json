@@ -66,6 +66,13 @@
       "pillar": "node_python",
       "url": "https://dev.to/webruster/the-one-design-review-question-that-would-have-caught-our-apim-naming-collision-2onl-temp-slug-3272562",
       "published_date": "2026-07-31"
+    },
+    {
+      "review_id": "2026-08-11-c4-diagram-seven-hops",
+      "title": "My container diagram had three boxes. The actual pipeline had seven hops.",
+      "pillar": "architecture",
+      "url": "https://dev.to/webruster/my-container-diagram-had-three-boxes-the-actual-pipeline-had-seven-hops-40ee-temp-slug-6655088",
+      "published_date": "2026-08-11"
     }
   ],
   "rejected": []

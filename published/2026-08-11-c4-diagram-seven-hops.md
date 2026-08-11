@@ -1,4 +1,6 @@
 ---
+devto_url: "https://dev.to/webruster/my-container-diagram-had-three-boxes-the-actual-pipeline-had-seven-hops-40ee-temp-slug-6655088"
+published_date: "2026-08-11"
 title: "My container diagram had three boxes. The actual pipeline had seven hops."
 pillar: architecture
 tags: [architecture, softwaredesign, systemdesign]
