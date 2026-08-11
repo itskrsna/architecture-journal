@@ -1,5 +1,5 @@
 {
-  "name": "tech-articles-pipeline",
+  "name": "tech-articles-pipelines",
   "version": "1.0.0",
   "private": true,
   "description": "Daily automated tech-article drafting, PR-based approval, and dev.to publishing pipeline",
