@@ -13,8 +13,9 @@ the PR yourself.
    more than one thing a day, or nothing on days you skip — extras just wait until they're
    the best fit for a future topic. **You never need to delete old entries**; once one gets
    used it's moved to `## Referenced` automatically.
-2. **Each day at 6:00 AM IST**, a Claude Code cloud routine reads that entry, drafts an
-   article grounded in it, and opens a PR on GitHub.
+2. **As soon as you push that entry**, a GitHub Action picks it up, drafts an article
+   grounded in it (running Claude Code itself, under your Claude subscription — not a
+   metered API key), and opens a PR on GitHub.
 3. **Review the PR** — from GitHub's web UI, mobile app, or email notification, from
    anywhere:
    - **Merge it** → publishes to dev.to automatically within a minute or two.
@@ -25,8 +26,8 @@ the PR yourself.
 ## Where things live
 
 - Repo: https://github.com/itskrsna/architecture-journal
-- Daily routine: https://claude.ai/code/routines/trig_01JS86HJCYYUFuB7T9UEvqGP
-  (cron `30 0 * * *` UTC = 6:00 AM IST — change the schedule there)
+- Daily drafting: `.github/workflows/draft-article.yml` (fires on push to
+  `config/experience-log.md` — edit the file to change the trigger)
 - dev.to account: **webruster**
 
 ## Key files
@@ -38,6 +39,7 @@ the PR yourself.
 | `config/topics-queue.json` | Rotating topic backlog per pillar + used/rejected history — auto-managed, edit directly if you want to steer it |
 | `scripts/devto-publish.ts` | Publishes an approved draft to dev.to |
 | `scripts/handle-pr-close.ts` | Reconciles `topics-queue.json` when a PR merges or closes |
+| `.github/workflows/draft-article.yml` | Fires on push to the experience log; runs Claude Code (via `claude-code-action`) to draft and open the review PR |
 | `.github/workflows/handle-review.yml` | Fires on PR close; runs the publish/reject reconciliation |
 
 ## Going fully live
@@ -49,20 +51,20 @@ repo → **Settings → Secrets and variables → Actions → Variables** → se
 
 ## Common tasks
 
-- **Change the draft time**: edit the cron on the routine's page (link above).
 - **Add/steer topics**: edit `config/topics-queue.json`'s `queue` arrays directly, or just
-  let the routine auto-replenish when a pillar runs low.
-- **Pause everything**: disable the routine at the link above (routines can only be disabled
-  or updated via the web UI, not deleted via API).
-- **Rotate the GitHub token**: the routine authenticates via a fine-grained PAT (scoped to
-  only this repo) embedded in its own stored prompt — see `CLAUDE.md` for why. To rotate it,
-  generate a new one (GitHub → Settings → Developer settings → Personal access tokens →
-  Fine-grained tokens) and ask Claude to update the routine with it.
+  let the workflow auto-replenish when a pillar runs low.
+- **Pause everything**: disable the `draft-article.yml` workflow from the repo's **Actions**
+  tab (`workflow_dispatch` still lets you run it manually while paused).
+- **Rotate the Claude Code OAuth token**: run `claude setup-token` again locally, then repo →
+  **Settings → Secrets and variables → Actions → Secrets** → update
+  `CLAUDE_CODE_OAUTH_TOKEN`. This draws from your Claude subscription's usage, not a metered
+  API key — see `CLAUDE.md` for the full authentication story.
 
 ## Troubleshooting
 
 - **No PR showed up**: check `config/experience-log.md` has a bullet dated *today* — if not,
-  that's why (the hard gate). Also check the routine actually ran, on its claude.ai page.
+  that's why (the hard gate). Also check the repo's **Actions** tab for the "Draft daily
+  article" workflow run and its logs.
 - **Merged but nothing published**: check the repo's **Actions** tab for the "Handle article
   review decision" workflow run and its logs.
 - **dev.to link 404s**: you're logged into the wrong dev.to account in your browser (should
