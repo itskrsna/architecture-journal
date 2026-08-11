@@ -1,15 +1,26 @@
 name: Draft daily article
 
-# Replaces the Claude Code cloud routine described in CLAUDE.md — that routine's git push
-# stopped working when Claude Code's cloud-session GitHub egress proxy started requiring a
-# linked GitHub connector, which this workspace doesn't have. Running the same drafting logic
-# as a plain GitHub Action sidesteps that entirely: this job authenticates with its own
-# GITHUB_TOKEN, the same way handle-review.yml already does, and needs no Claude Code
-# involvement at all — only a directly-purchased ANTHROPIC_API_KEY secret.
+# Replaces both the old Claude Code cloud routine (broken — see CLAUDE.md history) and the
+# short-lived Anthropic-API-key version of this workflow (too costly for a personal project).
+# This version runs Claude Code itself, inside the Action, authenticated with a subscription
+# OAuth token (`claude setup-token`, stored as CLAUDE_CODE_OAUTH_TOKEN) instead of a metered
+# API key — so usage draws from the Claude subscription's allowance, not separate billing.
+# Git/PR operations use the job's own GITHUB_TOKEN, same as handle-review.yml already does.
+#
+# Triggered by pushing today's config/experience-log.md entry, rather than a fixed-time cron —
+# no dependency on any machine being on at a particular hour. The hard gate inside the prompt
+# below is still the real safety net: a push that doesn't add a same-day entry (e.g. a PR merge
+# that brings the *previous* day's entry-move commit into main) just runs the gate check and
+# exits, at negligible cost.
+#
+# NOTE: this action's push-trigger path is less documented than its usual PR-comment trigger.
+# Run it once via workflow_dispatch and check the Actions log before trusting the schedule.
 
 on:
-  schedule:
-    - cron: '0 12 * * *' # 12:00 UTC daily — adjust to taste
+  push:
+    branches: [main]
+    paths:
+      - 'config/experience-log.md'
   workflow_dispatch: {}
 
 permissions:
@@ -25,43 +36,105 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - run: npm ci
-
-      - name: Draft today's article
-        id: draft
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: npx tsx scripts/draft-article.ts
-
-      - name: Open the review PR
-        if: steps.draft.outputs.drafted == 'true'
+      - uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "architecture-journal-bot"
-          git config user.email "articles-bot@users.noreply.github.com"
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch"
+          prompt: |
+            You are the daily drafting step of a personal tech-article publishing pipeline.
+            You are already checked out in a local clone of
+            https://github.com/itskrsna/architecture-journal on its default branch — treat the
+            repository root as your working directory for everything below. Git push and GitHub
+            operations work directly (the job's GITHUB_TOKEN is already wired up as GH_TOKEN for
+            `gh`, and git push is already authorized) — no token handling needed.
 
-          BRANCH="draft/${{ steps.draft.outputs.review_id }}"
-          git checkout -b "$BRANCH"
-          git add config/topics-queue.json config/experience-log.md \
-            "drafts/${{ steps.draft.outputs.review_id }}.md"
-          git commit -m "Draft: ${{ steps.draft.outputs.title }}"
-          git push -u origin "$BRANCH"
+            Read config/profile.md, config/topics-queue.json, AND config/experience-log.md first.
+            profile.md has the author's voice/style rules (including an 'Anti-AI-detector rules'
+            subsection — treat this as seriously as the banned-phrase list), tech pillars,
+            writing-sample references, and draft file format. topics-queue.json has the rotating
+            topic backlog per pillar plus 'used'/'rejected' history. experience-log.md is a
+            running inbox of raw real-world material under its '## Unused' heading.
 
-          gh pr create \
-            --repo "${{ github.repository }}" \
-            --base main \
-            --head "$BRANCH" \
-            --title "${{ steps.draft.outputs.title }}" \
-            --body "$(cat <<EOF
-          Pillar: ${{ steps.draft.outputs.pillar }}
-          Tags: ${{ steps.draft.outputs.tags }}
-          Word count: ~${{ steps.draft.outputs.word_count }}
+            0. HARD GATE — CHECK FIRST: get today's date (`date -u +%Y-%m-%d`). Look at
+               experience-log.md's '## Unused' section for a bullet whose text starts with
+               today's date (YYYY-MM-DD:). If NO such bullet exists, STOP HERE — do not pop any
+               topic from topics-queue.json, do not draft anything, do not create a branch or PR.
+               Just report back: "Skipped — no experience-log.md entry dated <today> under
+               Unused." and end. Only proceed to step 1 if at least one today-dated entry exists
+               (this gate is just an on/off switch for whether you draft today — it does not
+               restrict which entry you use in step 3).
 
-          Merge this PR to publish it to dev.to. Close it without merging to reject — leave a comment explaining why if you want future drafts to account for it.
-          EOF
-          )"
+            1. PICK A TOPIC: choose whichever of the 5 pillars (architecture, devops_cloud,
+               azure, dotnet, node_python) has gone longest without a 'used' entry (if 'used' is
+               empty, rotate through them based on how many total used+rejected entries exist so
+               far, cycling architecture, devops_cloud, azure, dotnet, node_python). Pop one
+               topic string from that pillar's queue array in topics-queue.json — pick whichever
+               entry in that pillar's list is most timely/interesting, not necessarily the first.
+
+            2. REPLENISH IF LOW: if that pillar's queue array now has fewer than 3 items left,
+               generate 5 new candidate topics for that pillar in the same spirit as the existing
+               ones, cross-checked against all titles already in queue/used/rejected (any pillar)
+               so nothing repeats, and append them to that pillar's queue array.
+
+            3. GROUNDING MATERIAL: consider ALL entries currently in experience-log.md's
+               '## Unused' section — not just today-dated ones; older un-used entries from
+               previous days are equally fair game and should never just sit there unused. Pick
+               whichever single entry (regardless of its date) best fits today's topic/pillar.
+               Prefer today's entries when there's a close tie, but don't force a weaker fit just
+               because it's newer. Also check profile.md's 'Concrete experience to draw on'
+               section for anything additionally relevant. Note which entry you used, you'll need
+               it in step 8.
+
+            4. DRAFT THE ARTICLE: 800-1400 words, following profile.md's voice/style rules AND
+               its anti-AI-detector rules exactly (deliberate sentence-length burstiness, no
+               reflexive intro/three-points/conclusion shape, no perfectly-hedged both-sides
+               framing, varied paragraph lengths). Avoid every phrase on the banned-phrase list.
+               The article must contain at least one concrete, falsifiable claim (a number, a
+               named pattern, a real trade-off) and take a clear side rather than hedging
+               everything. Ground it specifically in the experience-log entry from step 3 —
+               don't just mention it in passing, build the article's core argument around the
+               real texture it gives you. If profile.md has real 'Writing samples' entries (not
+               the placeholder), calibrate your sentence rhythm and voice against them.
+
+            5. BANNED-PHRASE SELF-REVIEW: re-read your draft specifically hunting for anything on
+               the banned-phrase list or generic AI-sounding filler; rewrite those spots.
+
+            6. AI-DETECTOR SELF-CHECK: re-read the draft again, this time specifically hunting
+               for detector-bait patterns — uniform sentence rhythm, generic paragraph
+               transitions, mechanically clean structure, over-balanced arguments. Rewrite for
+               burstiness and a distinct point of view wherever you find these. This is a
+               separate pass from step 5 — do not skip it.
+
+            7. ORIGINALITY SPOT-CHECK: pick the 2-3 most distinctive sentences from the final
+               draft and use WebSearch on each (as an exact phrase) to check they don't return a
+               verbatim match elsewhere online. If one does, rewrite that sentence.
+
+            8. FILE IT: compute review_id as `<today's-date YYYY-MM-DD>-<short-kebab-slug-of-the-
+               title>`. Write the topics-queue.json updates (the popped topic + any replenished
+               topics) to disk. Move the experience-log.md entry you used in step 3 from
+               '## Unused' to '## Referenced', appending " — used in <review_id>" to it. Write
+               the article to drafts/<review_id>.md with YAML front-matter exactly matching the
+               'Draft file format' section of profile.md (title, pillar, tags — up to 4, from
+               profile.md's per-pillar tag defaults — review_id, date), followed by the article
+               body.
+
+            9. GIT + PR: set a bot identity for this commit (`git config user.name
+               "architecture-journal-bot"` and `git config user.email
+               "articles-bot@users.noreply.github.com"`). Create and check out a new branch named
+               `draft/<review_id>` from main. Stage config/topics-queue.json,
+               config/experience-log.md, and drafts/<review_id>.md, commit with a message like
+               "Draft: <title>", and push the branch to origin. Then open a pull request using
+               the gh CLI, base=main, head=draft/<review_id>, title = the article's title, and
+               body containing: the pillar, the tags, an approximate word count, and this exact
+               line: "Merge this PR to publish it to dev.to. Close it without merging to reject —
+               leave a comment explaining why if you want future drafts to account for it."
+
+            10. REPORT: end with a short summary — which pillar/topic you drafted, which
+                experience-log entry grounded it, the review_id, and the PR URL (or, if PR
+                creation failed, the pushed branch name and a note that it needs manual PR
+                creation). Do not merge or close anything yourself — only the human reviewer does
+                that.
