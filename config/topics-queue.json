@@ -4,7 +4,11 @@
     "architecture": [
       "The difference between a design review and a rubber stamp",
       "Trade-off tables vs prose: how to actually document a hard architecture call",
-      "When to introduce a new bounded context vs extend an existing one"
+      "Premature abstraction vs premature duplication: which one actually costs more",
+      "Why the best architecture diagrams lie about who owns what",
+      "The architecture decision you didn't write down is the one that gets relitigated",
+      "Shared library, shared pain: when a common module becomes nobody's responsibility",
+      "Escape hatches in a design system: how many is too many before the abstraction is broken"
     ],
     "devops_cloud": [
       "What breaks first when you move from one cluster to multi-cluster Kubernetes",
