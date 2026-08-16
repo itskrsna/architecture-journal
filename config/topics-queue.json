@@ -2,9 +2,13 @@
   "_readme": "queue: topics not yet drafted, grouped by pillar. When the daily drafting routine picks one, it removes it from queue in the SAME commit as the draft file (single PR). used: appended when a PR merges (title/pillar read straight from the merged file's front-matter), with devto url + date. rejected: appended when a PR is closed without merging (title/pillar read from the closed PR's head commit via the GitHub API, since that content never lands on main), with any PR feedback text, so future drafts avoid the same miss. When a pillar's queue drops below 3 items, the daily drafting run generates 5 more for that pillar, checked against 'used' and 'rejected' titles before adding.",
   "queue": {
     "architecture": [
-      "The difference between a design review and a rubber stamp",
       "Trade-off tables vs prose: how to actually document a hard architecture call",
-      "When to introduce a new bounded context vs extend an existing one"
+      "When to introduce a new bounded context vs extend an existing one",
+      "The abstraction you add 'just in case' is a liability, not an asset",
+      "What a good ADR captures that a wiki page documenting the same decision doesn't",
+      "Sequence diagrams vs C4 dynamic views: when the extra diagram earns its keep",
+      "Reusable vs shared: two different architecture goals people conflate until an outage",
+      "Why the best architecture diagrams are the ones you keep redrawing, not the ones you finalize"
     ],
     "devops_cloud": [
       "What breaks first when you move from one cluster to multi-cluster Kubernetes",

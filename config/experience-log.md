@@ -28,9 +28,31 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   teammate over whether a new reporting service should be its own bounded context or bolted
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
-  
-2026-08-16: 
-# Field Validation Framework 
+
+
+## Referenced
+
+*(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
+2026-07-26-bounded-context-when")*
+
+2026-07-26: created branching strategy and  multiple azure environments on the fly so the building product can be be fast phased — used in 2026-07-27-subscription-per-environment-question
+
+2026-07-28: gitflow release strategy: i have built pipeline and from develop to release on this build pipeline runs and with same artifact we will release to different environment, (dev,qa,sit,uat,prod)  and after succesfull deployment of release we tag the particular release after merginng from release to main, now any issue comes in the production, we raise branch from tag as hot fix and creates pr to Release and deploy to the UAT slot as hot fix after testing we will toggle the slot, we are cherry picking the hotfix and merging into the develop and to the main branch and updating the tag, the point here is that how to release the hotfix from release branch?
+release have untested code so we release directly from hotfix branch itself and we have some more scenarios where we documented the approach — used in 2026-07-26-hotfix-cherry-pick-smell
+
+2026-07-29: nuget package implementation of domain projects and pushing to private artifactory and using custom dependent bot to bump the version and releasing to the microservice repos — used in 2026-07-29-net-core-production-ready
+
+2026-07-30: The error is a classic APIM named-value uniqueness conflict, not a pipeline/script bug:"Property with the same name already exist." (target: "name")
+  APIM named values have two identifiers:- id — the resource ID (what apiops derives from your artifact folder name)- name — the display name property inside the resource, which APIM enforces must be unique across the whole service, independent of id This error means: in one environment, there is already a named value (created earlier — likely manually via portal, or under a different id/folder) whose name property is key1, but its id differs from the id the publisher is trying to PUT. APIM refuses the write because you'd end up with two different named values sharing the same name. — used in 2026-07-30-design-review-naming-collision
+
+2026-08-11: Distributed Tracing with OpenTelemetry: A single user action in ALSC — for example, uploading an EPCIS batch file — fans out into many independent executions: a browser request, a Node.js Function, a blob write, a Service Bus message, a .NET Function, a Hangfire background job, and several more Service Bus hops. Each of these already produces its own logs. The problem distributed tracing solves is not "do we have enough logs" — it is "can we prove which logs, across which services, belong to the same end-user action."
+Three practical outcomes motivated this work for ALSC specifically:
+●	Faster incident response. A support ticket referencing a failed batch can be resolved by pulling one trace ID's full path through Application Map, instead of asking four different teams to search their own logs around a rough timestamp.
+●	Visibility into a genuinely non-obvious hop. Hangfire's Redis-backed queue does not carry any request context by default — a job dequeued by the Hangfire server has no idea which upload triggered it unless that link is captured explicitly. Distributed tracing forces this link to be made explicit in code, rather than left as an assumption.
+●	Safe cost control. Because trace volume maps directly to Application Insights ingestion cost, the platform needed the ability to turn tracing on only when investigating an incident, without redeploying every service. (Part X covers this in full.) — used in 2026-08-11-c4-diagram-seven-hops
+
+2026-08-16:
+# Field Validation Framework
 A generic, pluggable field-level validation engine for React forms in this app. It is **not**
 a restricted-character or max-length tool specifically — those are just two of the rule kinds
 it understands. New rule kinds are added without touching any page that already uses it.
@@ -77,26 +99,4 @@ const rules: Record<string, FieldRule> = {
 3. Wire the field's blur handler to call `validateField(name, value, allValues)` — reuse your page's existing blur dispatcher if it has one (see FAQ) rather than adding a second one.
 4. Pass `errorMessage={errors[name]}` and `isInvalid={!!errors[name]}` into `CustomFormLabelAndInput` (or your input component) for that field. No changes to the input component are needed — it already supports these two optional props.
 5. Wherever your page currently decides whether Submit/Next is enabled, call `validateAll(currentValues, allValues)` for the ruled fields instead of writing a new bespoke check next to it.
-6. If you need a rule kind that isn't in the table above, reach for `custom` first. Only add a new named preset to `fieldValidation.ts`'s rule registry once the same logic is needed in 2+ places — this keeps the engine's surface small and demand-driven.
-
-
-## Referenced
-
-*(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
-2026-07-26-bounded-context-when")*
-
-2026-07-26: created branching strategy and  multiple azure environments on the fly so the building product can be be fast phased — used in 2026-07-27-subscription-per-environment-question
-
-2026-07-28: gitflow release strategy: i have built pipeline and from develop to release on this build pipeline runs and with same artifact we will release to different environment, (dev,qa,sit,uat,prod)  and after succesfull deployment of release we tag the particular release after merginng from release to main, now any issue comes in the production, we raise branch from tag as hot fix and creates pr to Release and deploy to the UAT slot as hot fix after testing we will toggle the slot, we are cherry picking the hotfix and merging into the develop and to the main branch and updating the tag, the point here is that how to release the hotfix from release branch?
-release have untested code so we release directly from hotfix branch itself and we have some more scenarios where we documented the approach — used in 2026-07-26-hotfix-cherry-pick-smell
-
-2026-07-29: nuget package implementation of domain projects and pushing to private artifactory and using custom dependent bot to bump the version and releasing to the microservice repos — used in 2026-07-29-net-core-production-ready
-
-2026-07-30: The error is a classic APIM named-value uniqueness conflict, not a pipeline/script bug:"Property with the same name already exist." (target: "name")
-  APIM named values have two identifiers:- id — the resource ID (what apiops derives from your artifact folder name)- name — the display name property inside the resource, which APIM enforces must be unique across the whole service, independent of id This error means: in one environment, there is already a named value (created earlier — likely manually via portal, or under a different id/folder) whose name property is key1, but its id differs from the id the publisher is trying to PUT. APIM refuses the write because you'd end up with two different named values sharing the same name. — used in 2026-07-30-design-review-naming-collision
-
-2026-08-11: Distributed Tracing with OpenTelemetry: A single user action in ALSC — for example, uploading an EPCIS batch file — fans out into many independent executions: a browser request, a Node.js Function, a blob write, a Service Bus message, a .NET Function, a Hangfire background job, and several more Service Bus hops. Each of these already produces its own logs. The problem distributed tracing solves is not "do we have enough logs" — it is "can we prove which logs, across which services, belong to the same end-user action."
-Three practical outcomes motivated this work for ALSC specifically:
-●	Faster incident response. A support ticket referencing a failed batch can be resolved by pulling one trace ID's full path through Application Map, instead of asking four different teams to search their own logs around a rough timestamp.
-●	Visibility into a genuinely non-obvious hop. Hangfire's Redis-backed queue does not carry any request context by default — a job dequeued by the Hangfire server has no idea which upload triggered it unless that link is captured explicitly. Distributed tracing forces this link to be made explicit in code, rather than left as an assumption.
-●	Safe cost control. Because trace volume maps directly to Application Insights ingestion cost, the platform needed the ability to turn tracing on only when investigating an incident, without redeploying every service. (Part X covers this in full.) — used in 2026-08-11-c4-diagram-seven-hops
+6. If you need a rule kind that isn't in the table above, reach for `custom` first. Only add a new named preset to `fieldValidation.ts`'s rule registry once the same logic is needed in 2+ places — this keeps the engine's surface small and demand-driven. — used in 2026-08-16-design-review-vs-rubber-stamp
