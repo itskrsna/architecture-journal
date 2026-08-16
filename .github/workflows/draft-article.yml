@@ -7,20 +7,15 @@ name: Draft daily article
 # API key — so usage draws from the Claude subscription's allowance, not separate billing.
 # Git/PR operations use the job's own GITHUB_TOKEN, same as handle-review.yml already does.
 #
-# Triggered by pushing today's config/experience-log.md entry, rather than a fixed-time cron —
-# no dependency on any machine being on at a particular hour. The hard gate inside the prompt
-# below is still the real safety net: a push that doesn't add a same-day entry (e.g. a PR merge
-# that brings the *previous* day's entry-move commit into main) just runs the gate check and
-# exits, at negligible cost.
-#
-# NOTE: this action's push-trigger path is less documented than its usual PR-comment trigger.
-# Run it once via workflow_dispatch and check the Actions log before trusting the schedule.
+# `anthropics/claude-code-action` rejects a plain `push` trigger outright at runtime
+# ("Unsupported event type: push") — confirmed by an actual failed run, not just
+# under-documented. `workflow_dispatch` is confirmed working (a manual "Run workflow" run
+# succeeded). So this workflow ONLY listens for workflow_dispatch; the actual "run when today's
+# experience-log entry gets pushed" trigger lives in trigger-draft-article.yml, a plain
+# push-triggered workflow (no claude-code-action in it, so the whitelist never applies) that
+# dispatches this one via `gh workflow run`. See that file for the other half.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'config/experience-log.md'
   workflow_dispatch: {}
 
 permissions:

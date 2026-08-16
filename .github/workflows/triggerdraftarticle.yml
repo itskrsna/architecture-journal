@@ -1,0 +1,31 @@
+name: Trigger daily article draft
+
+# `anthropics/claude-code-action` (used in draft-article.yml) rejects a plain `push` trigger
+# outright at runtime ("Unsupported event type: push"). This workflow contains no
+# claude-code-action step at all — it's the plain-Actions half that reacts to a push and
+# dispatches draft-article.yml via its `workflow_dispatch` trigger, which is confirmed to work.
+#
+# End result is the same as a direct push trigger would have been: push today's
+# config/experience-log.md entry, and drafting kicks off within a few seconds, with one extra
+# workflow run in between that does nothing but relay the signal.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'config/experience-log.md'
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch draft-article.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run draft-article.yml \
+            --repo "${{ github.repository }}" \
+            --ref main
