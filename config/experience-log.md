@@ -1,6 +1,6 @@
 # Experience Log
 
-A running inbox of real,, raw material — not a polished document. Add a bullet here any time
+A running inbox of real, raw material — not a polished document. Add a bullet here any time
 something happens that's worth an article someday: a decision you made, an incident, a debate
 you had with a teammate, a number that surprised you, a pattern you noticed twice. Don't
 polish it, don't tie it to a pillar, don't wait for the "right" moment — just capture it.
