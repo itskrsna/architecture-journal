@@ -8,6 +8,17 @@ name: Trigger daily article draft
 # End result is the same as a direct push trigger would have been: push today's
 # config/experience-log.md entry, and drafting kicks off within a few seconds, with one extra
 # workflow run in between that does nothing but relay the signal.
+#
+# Merging a draft's PR brings that PR's own experience-log.md edit (today's entry moved to
+# Referenced) into main, which matches the path filter below and would otherwise dispatch this
+# whole chain again on every merge. The hard gate in draft-article.yml's prompt catches this
+# (nothing else to draft, it just reports "Skipped") but that still burns a real Claude Code
+# run's worth of subscription usage for no reason. The `if:` below skips dispatching when the
+# push is itself a draft/* merge — covers the default "Create a merge commit" button and the
+# rebase-merge case (where the bot's own "Draft: ..." commit gets replayed verbatim onto main).
+# Squash-merge commit messages don't have a reliably matchable pattern, so this doesn't cover
+# that merge strategy — if you switch to squash merging as the default, this guard stops
+# helping and the hard gate in draft-article.yml is the only thing preventing a wasted run.
 
 on:
   push:
@@ -20,6 +31,10 @@ permissions:
 
 jobs:
   dispatch:
+    if: >-
+      !(startsWith(github.event.head_commit.message, 'Merge pull request') &&
+      contains(github.event.head_commit.message, 'draft/')) &&
+      !startsWith(github.event.head_commit.message, 'Draft: ')
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch draft-article.yml
