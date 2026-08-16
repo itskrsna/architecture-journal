@@ -1,4 +1,4 @@
-# Architecture Journal — Automated Article Pipeline
+# Architecture Journal — Automated Article Pipeline 
 
 Drafts one tech article a day, grounded in your real experience, opens a GitHub PR for your
 review, and publishes whatever you approve to dev.to. Nothing goes live without you merging
