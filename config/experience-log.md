@@ -29,7 +29,8 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
   
-2026-08-16:  # Field Validation Framework 
+2026-08-16: 
+# Field Validation Framework 
 A generic, pluggable field-level validation engine for React forms in this app. It is **not**
 a restricted-character or max-length tool specifically — those are just two of the rule kinds
 it understands. New rule kinds are added without touching any page that already uses it.
