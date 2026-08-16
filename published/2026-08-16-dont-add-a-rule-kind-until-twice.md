@@ -1,4 +1,6 @@
 ---
+devto_url: "https://dev.to/webruster/dont-add-a-new-rule-kind-until-youve-written-the-same-check-twice-3jjj-temp-slug-992129"
+published_date: "2026-08-16"
 title: "Don't add a new rule kind until you've written the same check twice"
 pillar: architecture
 tags: [architecture, softwaredesign, systemdesign]
