@@ -37,6 +37,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Without this, the action uses its own bundled Claude GitHub App identity for all
+          # git/PR operations, so PRs show up as opened by claude[bot]. This forces it to use
+          # the job's plain GITHUB_TOKEN instead, same as handle-review.yml already does —
+          # PRs will show as opened by github-actions[bot] instead (the commits themselves
+          # still carry the architecture-journal-bot git identity set in the prompt below;
+          # that's a separate piece of metadata from "who opened the PR").
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # This workflow is only ever dispatched by trigger-draft-article.yml (itself only
           # reachable via a push gated on repo write access), so a bot-identity actor here is
           # expected and safe to allow, not a sign of some unrelated automated trigger.
