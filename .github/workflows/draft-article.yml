@@ -52,7 +52,7 @@ jobs:
           # expected and safe to allow, not a sign of some unrelated automated trigger.
           allowed_bots: "*"
           claude_args: |
-            --max-turns 40
+            --max-turns 80
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch"
           prompt: |
             You are the daily drafting step of a personal tech-article publishing pipeline.
