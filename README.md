@@ -6,7 +6,10 @@ the PR yourself.
 
 ## Your daily job
 
-1. **Add a dated bullet to `config/experience-log.md`** under `## Unused`, starting with
+1. **Log today's entry** — no file editing needed: run `npm run log`, open
+   http://localhost:4173, type, **Save & push** (inserts the dated bullet, commits, pushes).
+   From phone/web instead: Actions tab → "Log experience entry" → Run workflow. Or, manually,
+   **add a dated bullet to `config/experience-log.md`** under `## Unused`, starting with
    today's date (`2026-07-26: ...`). This is required — **no entry dated today means no
    article gets drafted that day, on purpose.** Jot down anything real: a decision, an
    incident, a number that surprised you, a debate you had. Don't polish it. Feel free to log

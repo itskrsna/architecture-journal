@@ -1,0 +1,45 @@
+name: Log experience entry
+
+# Web/phone alternative to the local form: Actions tab (or GitHub mobile) -> "Log experience
+# entry" -> Run workflow -> type the entry. Commits it to main and dispatches drafting directly,
+# because pushes made with GITHUB_TOKEN don't fire other workflows' push triggers.
+
+on:
+  workflow_dispatch:
+    inputs:
+      entry:
+        description: "Today's experience (what happened, decision, incident, number...)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Add entry
+        env:
+          ENTRY_TEXT: ${{ inputs.entry }}
+        run: npx tsx scripts/add-entry.ts
+      - name: Commit, push, dispatch drafting
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "architecture-journal-bot"
+          git config user.email "articles-bot@users.noreply.github.com"
+          git add config/experience-log.md
+          git commit -m "Experience log: new entry"
+          git pull --rebase origin main
+          git push origin main
+          gh workflow run draft-article.yml --repo "${{ github.repository }}" --ref main

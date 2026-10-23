@@ -54,6 +54,7 @@ jobs:
           allowed_bots: "*"
           claude_args: |
             --max-turns 80
+            --settings '{"includeCoAuthoredBy":false,"attribution":{"commit":"","pr":""}}'
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch"
           prompt: |
             You are the daily drafting step of a personal tech-article publishing pipeline.
@@ -138,14 +139,32 @@ jobs:
                "articles-bot@users.noreply.github.com"`). Create and check out a new branch named
                `draft/<review_id>` from main. Stage config/topics-queue.json,
                config/experience-log.md, and drafts/<review_id>.md, commit with a message like
-               "Draft: <title>", and push the branch to origin. Then open a pull request using
+               "Draft: <title>" (single -m, NO Co-Authored-By or any trailer, and no mention of
+               Claude/AI anywhere in commit messages), and push the branch to origin. Then open a pull request using
                the gh CLI, base=main, head=draft/<review_id>, title = the article's title, and
                body containing: the pillar, the tags, an approximate word count, and this exact
                line: "Merge this PR to publish it to dev.to. Close it without merging to reject —
                leave a comment explaining why if you want future drafts to account for it."
+               Do NOT append any "Generated with Claude Code" footer, emoji signature, or other
+               attribution line to the PR body.
 
             10. REPORT: end with a short summary — which pillar/topic you drafted, which
                 experience-log entry grounded it, the review_id, and the PR URL (or, if PR
                 creation failed, the pushed branch name and a note that it needs manual PR
                 creation). Do not merge or close anything yourself — only the human reviewer does
                 that.
+
+      # Safety net: strip any tool-attribution footer that still ends up in a draft PR body.
+      - name: Scrub attribution from draft PRs
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for n in $(gh pr list --state open --json number,headRefName                        --jq '.[] | select(.headRefName | startswith("draft/")) | .number'); do
+            body=$(gh pr view "$n" --json body --jq .body)
+            clean=$(printf '%s
+' "$body" | grep -viE 'generated with|claude' || true)
+            if [ "$clean" != "$body" ]; then
+              gh pr edit "$n" --body "$clean"
+            fi
+          done
