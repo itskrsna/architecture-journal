@@ -29,6 +29,12 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
 
+- 2026-10-23: The file is transferred from Azure Cloud to an on-premises environment, and from there, it is forwarded to another customer’s site. Due to compliance requirements, the reporting must happen from that specific onprem to customer site.
+  
+  If we use an HTTP trigger instead of an event-driven trigger (Azure Service Bus), we can potentially retrieve the file processing status across the entire flow—from Azure to on-premises and then to the customer’s site—in a single request.
+  
+  However, this approach has a downside: the end-to-end response could introduce significant latency, as the request would need to wait for each step to complete before returning the final status. This is the trade-off when we need an on-demand response within the same request rather than handling the process asynchronously through event-driven messaging. or do we have any better approach than this?
+
 ## Referenced
 
 *(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
