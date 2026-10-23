@@ -20,7 +20,18 @@ used. Once unlocked, the routine considers everything still sitting in `## Unuse
 older, and picks whichever single entry best fits that day's topic. So: **you never need to
 delete anything yourself.** Log as much as you want on any given day — extras that don't get
 picked simply wait their turn and get used whenever they're the best fit, then move to
-`## Referenced` automatically. Nothing goes stale, nothing needs manual cleanup.
+`## Referenced`  — used in 2026-10-23-status-across-the-compliance-hop
+
+automatically. Nothing goes stale, nothing needs manual cleanup.
+
+## Unused
+
+- *(example — delete once you've added real ones: "2026-07-20: Spent a sprint arguing with a
+  teammate over whether a new reporting service should be its own bounded context or bolted
+  onto the existing orders service. We split it out; six months later glad we did because the
+  reporting side needed a completely different scaling profile.")*
+
+## Referenced` automatically. Nothing goes stale, nothing needs manual cleanup.
 
 ## Unused
 

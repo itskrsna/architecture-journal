@@ -17,7 +17,6 @@
     ],
     "azure": [
       "Azure landing zone patterns for multi-team orgs past the 20-team mark",
-      "Azure Well-Architected Framework: which pillar gets ignored first under deadline pressure",
       "Cost governance in Azure: tagging policy vs actual accountability",
       "Choosing between Azure Functions, App Service, and AKS for a new service"
     ],
