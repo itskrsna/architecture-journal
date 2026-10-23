@@ -13,7 +13,6 @@
     "devops_cloud": [
       "What breaks first when you move from one cluster to multi-cluster Kubernetes",
       "Infrastructure as code drift: catching it before it catches you",
-      "Observability that gets used vs observability that gets dashboards nobody opens",
       "Blue-green vs canary: picking based on your actual failure modes, not the trend"
     ],
     "azure": [
