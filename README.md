@@ -28,10 +28,10 @@ closing the PR rejects it. Nothing goes live without you.
 
 ## Daily workflow
 
-1. **Log an entry.** Open the entry page (`https://itskrsna.github.io/architecture-journal/`,
-   see [Entry page setup](#entry-page-setup)) on your phone or any browser, type what
-   happened, and press **Save**. Make it real and unpolished: a decision, an incident, a
-   surprising number, a debate with a teammate. Saving commits a dated bullet to
+1. **Log an entry.** Open the entry page (your Worker URL, see
+   [Entry page setup](#entry-page-setup)) on your phone or any browser, type what happened,
+   and press **Save**. Make it real and unpolished: a decision, an incident, a surprising
+   number, a debate with a teammate. Saving commits a dated bullet to
    `config/experience-log.md` on `main`, which starts the pipeline. You can also edit that
    file by hand under `## Unused`, starting the bullet with today's date, `YYYY-MM-DD: ...`
    (UTC).
@@ -87,7 +87,7 @@ Git and PR operations use the job's own `GITHUB_TOKEN`.
 | `config/experience-log.md` | **Your daily input.** `## Unused` holds new entries; `## Referenced` holds the ones already used |
 | `config/profile.md` | Voice and style rules, tech pillars, banned phrases, style checks, tag defaults, draft file format |
 | `config/topics-queue.json` | Topic backlog per pillar plus used and rejected history. Auto-managed; edit the `queue` arrays to steer topics |
-| `docs/` | The entry page (static, served by GitHub Pages) used to log entries from any device |
+| `app/` | Cloudflare Worker serving the entry page; holds the GitHub token as a secret |
 | `drafts/` | Articles awaiting review. Each lives on its own `draft/*` branch until merged |
 | `published/` | Approved articles |
 | `scripts/devto-publish.ts` | Publishes an approved draft to dev.to |
@@ -115,18 +115,10 @@ Draft files are named `drafts/<YYYY-MM-DD>-<kebab-slug>.md`, on a branch named
 
 ## Entry page setup
 
-The page in `docs/` commits entries straight to `main` through the GitHub API, so it needs
-a token that is stored only in your browser.
-
-1. **Enable Pages:** repo → Settings → Pages → Source *Deploy from a branch* → Branch `main`,
-   folder `/docs`.
-2. **Create a token:** GitHub → Settings → Developer settings → Fine-grained tokens. Limit
-   it to this repository only, permission **Contents: Read and write**, with an expiry you
-   are comfortable renewing.
-3. **Open the page** on each device, paste the token under *GitHub token*, and save your
-   first entry. Use *Add to Home Screen* on your phone for one-tap access.
-
-Anyone can open the page, but without your token they cannot write anything.
+The entry page is a small Cloudflare Worker in `app/`. It commits entries to `main` through
+the GitHub API using a token kept as a Cloudflare secret, so no token is ever pasted into
+the browser. You only enter a passphrase, once per device. Full steps are in
+[`app/README.md`](app/README.md).
 
 ## Operating the pipeline
 

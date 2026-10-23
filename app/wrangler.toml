@@ -1,0 +1,8 @@
+name = "experience-log"
+main = "src/worker.mjs"
+compatibility_date = "2025-01-01"
+
+[vars]
+GITHUB_REPO = "itskrsna/architecture-journal"
+GITHUB_BRANCH = "main"
+# Secrets (set with `wrangler secret put`, never committed): GITHUB_TOKEN, PASSPHRASE
