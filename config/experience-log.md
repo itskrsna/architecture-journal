@@ -28,6 +28,8 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   teammate over whether a new reporting service should be its own bounded context or bolted
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
+
+2026-10-23: In SAAS based if we want to connect with onprem with the cloud using http trigger or using event based trigger like service bus . another scenario is how one queue act for all the customers in terms of scalability and reliability
   
 ## Referenced
 
