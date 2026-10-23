@@ -29,6 +29,8 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
 
+- 2026-10-23: testing
+
 ## Referenced
 
 *(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
