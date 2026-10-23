@@ -83,6 +83,13 @@
       "pillar": "architecture",
       "url": "https://dev.to/webruster/dont-add-a-new-rule-kind-until-youve-written-the-same-check-twice-3jjj-temp-slug-992129",
       "published_date": "2026-08-16"
+    },
+    {
+      "review_id": "2026-10-23-queue-depth-lies-in-multi-tenant-saas",
+      "title": "Queue depth lies when one Service Bus queue serves every customer",
+      "pillar": "devops_cloud",
+      "url": "https://dev.to/webruster/queue-depth-lies-when-one-service-bus-queue-serves-every-customer-11hk-temp-slug-4352121",
+      "published_date": "2026-10-23"
     }
   ],
   "rejected": []
