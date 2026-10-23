@@ -20,9 +20,7 @@ used. Once unlocked, the routine considers everything still sitting in `## Unuse
 older, and picks whichever single entry best fits that day's topic. So: **you never need to
 delete anything yourself.** Log as much as you want on any given day — extras that don't get
 picked simply wait their turn and get used whenever they're the best fit, then move to
-`## Referenced`  — used in 2026-10-23-status-across-the-compliance-hop
-
-automatically. Nothing goes stale, nothing needs manual cleanup.
+`## Referenced` automatically. Nothing goes stale, nothing needs manual cleanup.
 
 ## Unused
 
@@ -31,22 +29,13 @@ automatically. Nothing goes stale, nothing needs manual cleanup.
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
 
-## Referenced` automatically. Nothing goes stale, nothing needs manual cleanup.
-
-## Unused
-
-- *(example — delete once you've added real ones: "2026-07-20: Spent a sprint arguing with a
-  teammate over whether a new reporting service should be its own bounded context or bolted
-  onto the existing orders service. We split it out; six months later glad we did because the
-  reporting side needed a completely different scaling profile.")*
+## Referenced
 
 - 2026-10-23: The file is transferred from Azure Cloud to an on-premises environment, and from there, it is forwarded to another customer’s site. Due to compliance requirements, the reporting must happen from that specific onprem to customer site.
   
   If we use an HTTP trigger instead of an event-driven trigger (Azure Service Bus), we can potentially retrieve the file processing status across the entire flow—from Azure to on-premises and then to the customer’s site—in a single request.
   
-  However, this approach has a downside: the end-to-end response could introduce significant latency, as the request would need to wait for each step to complete before returning the final status. This is the trade-off when we need an on-demand response within the same request rather than handling the process asynchronously through event-driven messaging. or do we have any better approach than this?
-
-## Referenced
+  However, this approach has a downside: the end-to-end response could introduce significant latency, as the request would need to wait for each step to complete before returning the final status. This is the trade-off when we need an on-demand response within the same request rather than handling the process asynchronously through event-driven messaging. or do we have any better approach than this? — used in 2026-10-23-status-across-the-compliance-hop
 
 *(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
 2026-07-26-bounded-context-when")*
