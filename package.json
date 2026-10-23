@@ -7,7 +7,6 @@
   "scripts": {
     "devto-publish": "tsx scripts/devto-publish.ts",
     "handle-pr-close": "tsx scripts/handle-pr-close.ts",
-    "log": "tsx scripts/log-ui.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

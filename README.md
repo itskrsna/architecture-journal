@@ -1,74 +1,135 @@
-# Architecture Journal — Automated Article Pipeline 
+# Architecture Journal
 
-Drafts one tech article a day, grounded in your real experience, opens a GitHub PR for your
-review, and publishes whatever you approve to dev.to. Nothing goes live without you merging
-the PR yourself.
+An automated pipeline that turns one real experience note a day into a reviewed, published
+tech article.
 
-## Your daily job
+You log what happened at work. A GitHub Action drafts an article grounded in that note and
+opens a pull request. You review it. Merging publishes it to [dev.to](https://dev.to);
+closing the PR rejects it. Nothing goes live without you.
 
-1. **Log today's entry** — no file editing needed: run `npm run log`, open
-   http://localhost:4173, type, **Save & push** (inserts the dated bullet, commits, pushes).
-   From phone/web instead: Actions tab → "Log experience entry" → Run workflow. Or, manually,
-   **add a dated bullet to `config/experience-log.md`** under `## Unused`, starting with
-   today's date (`2026-07-26: ...`). This is required — **no entry dated today means no
-   article gets drafted that day, on purpose.** Jot down anything real: a decision, an
-   incident, a number that surprised you, a debate you had. Don't polish it. Feel free to log
-   more than one thing a day, or nothing on days you skip — extras just wait until they're
-   the best fit for a future topic. **You never need to delete old entries**; once one gets
-   used it's moved to `## Referenced` automatically.
-2. **As soon as you push that entry**, a GitHub Action picks it up, drafts an article
-   grounded in it (running Claude Code itself, under your Claude subscription — not a
-   metered API key), and opens a PR on GitHub.
-3. **Review the PR** — from GitHub's web UI, mobile app, or email notification, from
-   anywhere:
-   - **Merge it** → publishes to dev.to automatically within a minute or two.
-   - **Close it without merging** → rejects it. Leave a comment explaining why if you want
-     future drafts to avoid the same miss — it gets logged automatically.
-4. Check dev.to for the result (or the PR comment, which includes the live URL).
+```text
+ log an entry ──► commit to main ──► draft workflow ──► PR opened ──► you review
+ (phone / web)    (experience-log)   (writes article)   (draft/<id>)        │
+                                                                  merge ────┴──── close
+                                                                    │               │
+                                                              publish to dev.to   log rejection
+                                                                                  (feeds future drafts)
+```
 
-## Where things live
+## Contents
 
-- Repo: https://github.com/itskrsna/architecture-journal
-- Daily drafting: `.github/workflows/draft-article.yml` (fires on push to
-  `config/experience-log.md` — edit the file to change the trigger)
-- dev.to account: **webruster**
+- [Daily workflow](#daily-workflow)
+- [How it works](#how-it-works)
+- [Repository layout](#repository-layout)
+- [Setup](#setup)
+- [Operating the pipeline](#operating-the-pipeline)
+- [Troubleshooting](#troubleshooting)
 
-## Key files
+## Daily workflow
 
-| File | Purpose |
-|---|---|
-| `config/profile.md` | Voice/style rules, tech pillars, banned-phrase list, anti-AI-detector rules, dev.to tag defaults, draft file format |
-| `config/experience-log.md` | **Your daily input.** Add real notes here — this is what keeps articles from reading as generic AI output |
-| `config/topics-queue.json` | Rotating topic backlog per pillar + used/rejected history — auto-managed, edit directly if you want to steer it |
+1. **Log an entry.** Add a bullet to `config/experience-log.md` under `## Unused`, starting
+   with today's date, `YYYY-MM-DD: ...` (UTC). Edit the file on github.com, in the GitHub
+   mobile app, or locally and push. Make it real and unpolished: a decision, an incident, a
+   surprising number, a debate with a teammate. Pushing to `main` starts the pipeline.
+2. **Wait for the PR.** The commit triggers drafting. A few minutes later a pull request
+   appears from the branch `draft/<date>-<slug>`, containing the article and its metadata
+   (pillar, tags, word count).
+3. **Review it.** Use the GitHub web UI, the mobile app or the email notification.
+   - **Merge** to publish the article to dev.to within a minute or two.
+   - **Close without merging** to reject it. Add a comment explaining why if you want future
+     drafts to avoid the same miss. It is logged automatically.
+4. **Check the result** on dev.to, or in the PR comment, which carries the URL.
+
+### The one rule: no entry today, no article today
+
+The drafting job first looks in `## Unused` for a bullet dated today. If there is none, it
+stops: no topic is consumed, no PR is opened. This is deliberate. Early drafts written
+without real specifics read as generic AI output, and a same-day entry is what fixes that.
+
+The gate only decides *whether* a draft happens. Once it passes, the job picks the best
+fit from **all** unused entries, today's or older. You never delete entries. Used ones move
+to `## Referenced` on their own.
+
+## How it works
+
+Three GitHub Actions workflows do all the work. Nothing runs on your machine.
+
+| Stage | Workflow | Trigger |
+| --- | --- | --- |
+| Relay | `triggerdraftarticle.yml` | Push to `main` touching `config/experience-log.md` (skipped for merges of `draft/*` PRs) |
+| Draft | `draft-article.yml` | Dispatched by the relay, or run manually from the Actions tab |
+| Publish / reject | `handle-review.yml` | A pull request is closed |
+
+**Drafting.** `draft-article.yml` runs [`claude-code-action`](https://github.com/anthropics/claude-code-action)
+with the full drafting prompt inlined. It checks the gate, picks the pillar that has gone
+longest without an article, chooses a topic, grounds the piece in an experience entry,
+drafts 800–1400 words in the voice defined in `config/profile.md`, runs a banned-phrase
+pass, an AI-detector self-check and a web-search originality spot-check, then pushes the
+branch and opens the PR. Commits use the `architecture-journal-bot` identity, and the
+action is configured to add no tool attribution to commits or PR bodies.
+
+**Reviewing.** `handle-review.yml` runs `scripts/handle-pr-close.ts`. On merge it publishes
+the draft through `scripts/devto-publish.ts` and moves the file from `drafts/` to
+`published/`. On close it records the rejection and your comment in `topics-queue.json`.
+
+**Why a relay workflow?** `claude-code-action` refuses a plain `push` trigger, so a small
+push-triggered workflow dispatches the drafting workflow instead.
+
+**Cost.** Claude Code authenticates with a subscription OAuth token, so usage draws from
+your existing plan with no separate per-token billing. Git and PR operations use the job's
+own `GITHUB_TOKEN`. See [`CLAUDE.md`](CLAUDE.md) for the full authentication story and the
+history of how drafting got here.
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| `config/experience-log.md` | **Your daily input.** `## Unused` holds new entries; `## Referenced` holds the ones already used |
+| `config/profile.md` | Voice and style rules, tech pillars, banned phrases, anti-AI-detector rules, tag defaults, draft file format |
+| `config/topics-queue.json` | Topic backlog per pillar plus used and rejected history. Auto-managed; edit the `queue` arrays to steer topics |
+| `drafts/` | Articles awaiting review. Each lives on its own `draft/*` branch until merged |
+| `published/` | Approved articles |
 | `scripts/devto-publish.ts` | Publishes an approved draft to dev.to |
-| `scripts/handle-pr-close.ts` | Reconciles `topics-queue.json` when a PR merges or closes |
-| `.github/workflows/draft-article.yml` | Fires on push to the experience log; runs Claude Code (via `claude-code-action`) to draft and open the review PR |
-| `.github/workflows/handle-review.yml` | Fires on PR close; runs the publish/reject reconciliation |
+| `scripts/handle-pr-close.ts` | Reconciles the topic queue when a PR merges or closes |
+| `.github/workflows/` | The three workflows above |
+| `CLAUDE.md` | Technical decision record for future maintainers |
 
-## Going fully live
+Draft files are named `drafts/<YYYY-MM-DD>-<kebab-slug>.md`, on a branch named
+`draft/<same-id>`. Do not change this pattern without updating `HEAD_REF` parsing in
+`scripts/handle-pr-close.ts`.
 
-Merges currently publish to dev.to as **private drafts** (`DEVTO_LIVE=false`), so you can
-sanity-check quality before anything is public. Once you trust it:
-repo → **Settings → Secrets and variables → Actions → Variables** → set `DEVTO_LIVE` to
-`true`.
+## Setup
 
-## Common tasks
+1. **Repository secrets** (Settings → Secrets and variables → Actions → Secrets):
+   - `CLAUDE_CODE_OAUTH_TOKEN`: run `claude setup-token` locally and paste the result.
+   - `DEVTO_API_KEY`: your dev.to API key.
+2. **Repository variable** `DEVTO_LIVE`: leave `false` at first. Merges then publish as
+   **private dev.to drafts** so you can check quality. Set it to `true` to publish publicly.
+3. **Local development** (only if you change the scripts):
 
-- **Add/steer topics**: edit `config/topics-queue.json`'s `queue` arrays directly, or just
-  let the workflow auto-replenish when a pillar runs low.
-- **Pause everything**: disable the `draft-article.yml` workflow from the repo's **Actions**
-  tab (`workflow_dispatch` still lets you run it manually while paused).
-- **Rotate the Claude Code OAuth token**: run `claude setup-token` again locally, then repo →
-  **Settings → Secrets and variables → Actions → Secrets** → update
-  `CLAUDE_CODE_OAUTH_TOKEN`. This draws from your Claude subscription's usage, not a metered
-  API key — see `CLAUDE.md` for the full authentication story.
+   ```bash
+   npm install
+   npm run typecheck
+   ```
+
+
+## Operating the pipeline
+
+- **Steer topics:** edit the `queue` arrays in `config/topics-queue.json`. They also refill
+  automatically when a pillar runs low.
+- **Run a draft manually:** Actions → *Draft daily article* → *Run workflow*. It still
+  respects the same-day entry gate.
+- **Pause everything:** disable the `draft-article.yml` workflow in the Actions tab.
+- **Go live:** set the `DEVTO_LIVE` variable to `true`.
+- **Rotate the Claude token:** re-run `claude setup-token`, then update
+  `CLAUDE_CODE_OAUTH_TOKEN`.
 
 ## Troubleshooting
 
-- **No PR showed up**: check `config/experience-log.md` has a bullet dated *today* — if not,
-  that's why (the hard gate). Also check the repo's **Actions** tab for the "Draft daily
-  article" workflow run and its logs.
-- **Merged but nothing published**: check the repo's **Actions** tab for the "Handle article
-  review decision" workflow run and its logs.
-- **dev.to link 404s**: you're logged into the wrong dev.to account in your browser (should
-  be **webruster**), or `DEVTO_LIVE` is still `false` so it's a private draft only you can see.
+| Symptom | Likely cause |
+| --- | --- |
+| No PR appeared | No bullet dated today (UTC) under `## Unused`. Otherwise check the *Draft daily article* run in the Actions tab |
+| PR appeared but isn't on dev.to after merging | Check the *Handle article review decision* run in the Actions tab |
+| dev.to link returns 404 | You are signed in to the wrong dev.to account, or `DEVTO_LIVE` is still `false` and the post is a private draft only you can see |
+| An extra, instantly skipped draft run after a merge | Expected. Merging brings the entry-move diff into `main`; the gate exits immediately |
+| Entry pushed but nothing drafted | The commit must reach `main` with a today-dated bullet. Check the *Trigger daily article draft* run |
