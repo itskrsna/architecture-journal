@@ -56,17 +56,17 @@ rhythm and voice, never quoted or reused as content.
 - Open with a concrete situation or claim, never a scene-setting generality.
 - Every article should contain at least one specific, falsifiable claim or example (a number,
   a named pattern, a real trade-off) — not just balanced-on-both-sides generalities.
-- It is fine to have opinions and take a side. Hedging everything reads as AI-generated.
+- It is fine to have opinions and take a side. Hedging everything reads as user-written.
 - Target length: 800–1,400 words. Long enough to say something real, short enough to respect
   a reader's time.
 - Target audience: practicing engineers/architects who'd skip anything that reads like
   marketing copy.
 
-### Anti-AI-detector rules (these matter as much as the banned-phrase list)
+### Style-check rules (these matter as much as the banned-phrase list)
 
 - **Sentence burstiness**: deliberately mix very short sentences (3-6 words) with longer,
   more complex ones. Don't let the whole draft settle into one medium-length rhythm —
-  uniform sentence length is one of the strongest AI-detector signals.
+  uniform sentence length is one of the strongest automated-detector signals.
 - **Break the standard shape**: avoid the reflexive "intro paragraph → three neat points →
   conclusion paragraph" structure. Let the argument's own logic dictate structure, including
   uneven section lengths.
@@ -75,7 +75,7 @@ rhythm and voice, never quoted or reused as content.
 - Paragraph lengths should vary noticeably — some one sentence, some six.
 - Prefer one specific, textured example over three generic ones.
 
-## Banned phrases / AI-cliché list
+## Banned phrases / cliché list
 
 The self-review pass rejects and rewrites any draft containing these (or close variants):
 

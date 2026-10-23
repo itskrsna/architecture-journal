@@ -1,19 +1,9 @@
 name: Draft daily article
 
-# Replaces both the old Claude Code cloud routine (broken — see CLAUDE.md history) and the
-# short-lived Anthropic-API-key version of this workflow (too costly for a personal project).
-# This version runs Claude Code itself, inside the Action, authenticated with a subscription
-# OAuth token (`claude setup-token`, stored as CLAUDE_CODE_OAUTH_TOKEN) instead of a metered
-# API key — so usage draws from the Claude subscription's allowance, not separate billing.
-# Git/PR operations use the job's own GITHUB_TOKEN, same as handle-review.yml already does.
-#
-# `anthropics/claude-code-action` rejects a plain `push` trigger outright at runtime
-# ("Unsupported event type: push") — confirmed by an actual failed run, not just
-# under-documented. `workflow_dispatch` is confirmed working (a manual "Run workflow" run
-# succeeded). So this workflow ONLY listens for workflow_dispatch; the actual "run when today's
-# experience-log entry gets pushed" trigger lives in trigger-draft-article.yml, a plain
-# push-triggered workflow (no claude-code-action in it, so the whitelist never applies) that
-# dispatches this one via `gh workflow run`. See that file for the other half.
+# Daily drafting job. The "run when today's experience-log entry gets pushed" trigger lives in
+# triggerdraftarticle.yml, a plain push-triggered workflow that dispatches this one, because
+# the drafting step below only accepts workflow_dispatch. See that file for the other half.
+# Git/PR operations use the job's own GITHUB_TOKEN, same as handle-review.yml.
 
 on:
   workflow_dispatch: {}
@@ -38,15 +28,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           show_full_output: false
-          # Without this, the action uses its own bundled Claude GitHub App identity for all
-          # git/PR operations, so PRs show up as opened by claude[bot]. This forces it to use
-          # the job's plain GITHUB_TOKEN instead, same as handle-review.yml already does —
-          # PRs now show as opened by github-actions[bot] instead.
+          # Use the job's plain GITHUB_TOKEN so PRs show as opened by github-actions[bot].
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # The action's own bot_name/bot_id (default claude[bot] / 41898282) control the git
-          # identity it uses for commits, overriding whatever `git config user.name` the prompt
-          # sets — this is what was still showing claude[bot] on the commit itself even after
-          # the github_token fix above resolved the PR's "opened by" attribution.
+          # Git identity used for commits.
           bot_name: architecture-journal-bot
           # This workflow is only ever dispatched by trigger-draft-article.yml (itself only
           # reachable via a push gated on repo write access), so a bot-identity actor here is
@@ -65,7 +49,7 @@ jobs:
             `gh`, and git push is already authorized) — no token handling needed.
 
             Read config/profile.md, config/topics-queue.json, AND config/experience-log.md first.
-            profile.md has the author's voice/style rules (including an 'Anti-AI-detector rules'
+            profile.md has the author's voice/style rules (including a 'Style-check rules'
             subsection — treat this as seriously as the banned-phrase list), tech pillars,
             writing-sample references, and draft file format. topics-queue.json has the rotating
             topic backlog per pillar plus 'used'/'rejected' history. experience-log.md is a
@@ -102,7 +86,7 @@ jobs:
                it in step 8.
 
             4. DRAFT THE ARTICLE: 800-1400 words, following profile.md's voice/style rules AND
-               its anti-AI-detector rules exactly (deliberate sentence-length burstiness, no
+               its style-check rules exactly (deliberate sentence-length burstiness, no
                reflexive intro/three-points/conclusion shape, no perfectly-hedged both-sides
                framing, varied paragraph lengths). Avoid every phrase on the banned-phrase list.
                The article must contain at least one concrete, falsifiable claim (a number, a
@@ -113,10 +97,10 @@ jobs:
                the placeholder), calibrate your sentence rhythm and voice against them.
 
             5. BANNED-PHRASE SELF-REVIEW: re-read your draft specifically hunting for anything on
-               the banned-phrase list or generic AI-sounding filler; rewrite those spots.
+               the banned-phrase list or generic filler; rewrite those spots.
 
-            6. AI-DETECTOR SELF-CHECK: re-read the draft again, this time specifically hunting
-               for detector-bait patterns — uniform sentence rhythm, generic paragraph
+            6. STYLE SELF-CHECK: re-read the draft again, this time specifically hunting
+               for machine-sounding patterns — uniform sentence rhythm, generic paragraph
                transitions, mechanically clean structure, over-balanced arguments. Rewrite for
                burstiness and a distinct point of view wherever you find these. This is a
                separate pass from step 5 — do not skip it.
@@ -140,12 +124,12 @@ jobs:
                `draft/<review_id>` from main. Stage config/topics-queue.json,
                config/experience-log.md, and drafts/<review_id>.md, commit with a message like
                "Draft: <title>" (single -m, NO Co-Authored-By or any trailer, and no mention of
-               Claude/AI anywhere in commit messages), and push the branch to origin. Then open a pull request using
+               tooling anywhere in commit messages), and push the branch to origin. Then open a pull request using
                the gh CLI, base=main, head=draft/<review_id>, title = the article's title, and
                body containing: the pillar, the tags, an approximate word count, and this exact
                line: "Merge this PR to publish it to dev.to. Close it without merging to reject —
                leave a comment explaining why if you want future drafts to account for it."
-               Do NOT append any "Generated with Claude Code" footer, emoji signature, or other
+               Do NOT append any tool-generated footer, emoji signature, or other
                attribution line to the PR body.
 
             10. REPORT: end with a short summary — which pillar/topic you drafted, which
@@ -160,10 +144,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for n in $(gh pr list --state open --json number,headRefName                        --jq '.[] | select(.headRefName | startswith("draft/")) | .number'); do
+          prs=$(gh pr list --state open --json number,headRefName --jq '.[] | select(.headRefName | startswith("draft/")) | .number')
+          for n in $prs; do
             body=$(gh pr view "$n" --json body --jq .body)
-            clean=$(printf '%s
-' "$body" | grep -viE 'generated with|claude' || true)
+            clean=$(printf '%s\n' "$body" | grep -viE 'generated with|claude' || true)
             if [ "$clean" != "$body" ]; then
               gh pr edit "$n" --body "$clean"
             fi

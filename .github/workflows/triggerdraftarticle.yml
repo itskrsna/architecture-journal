@@ -1,24 +1,14 @@
 name: Trigger daily article draft
 
-# `anthropics/claude-code-action` (used in draft-article.yml) rejects a plain `push` trigger
-# outright at runtime ("Unsupported event type: push"). This workflow contains no
-# claude-code-action step at all — it's the plain-Actions half that reacts to a push and
-# dispatches draft-article.yml via its `workflow_dispatch` trigger, which is confirmed to work.
-#
-# End result is the same as a direct push trigger would have been: push today's
-# config/experience-log.md entry, and drafting kicks off within a few seconds, with one extra
-# workflow run in between that does nothing but relay the signal.
+# The drafting workflow (draft-article.yml) only accepts workflow_dispatch, so this workflow
+# is the plain-Actions half: it reacts to a push touching config/experience-log.md and
+# dispatches draft-article.yml.
 #
 # Merging a draft's PR brings that PR's own experience-log.md edit (today's entry moved to
-# Referenced) into main, which matches the path filter below and would otherwise dispatch this
-# whole chain again on every merge. The hard gate in draft-article.yml's prompt catches this
-# (nothing else to draft, it just reports "Skipped") but that still burns a real Claude Code
-# run's worth of subscription usage for no reason. The `if:` below skips dispatching when the
-# push is itself a draft/* merge — covers the default "Create a merge commit" button and the
-# rebase-merge case (where the bot's own "Draft: ..." commit gets replayed verbatim onto main).
-# Squash-merge commit messages don't have a reliably matchable pattern, so this doesn't cover
-# that merge strategy — if you switch to squash merging as the default, this guard stops
-# helping and the hard gate in draft-article.yml is the only thing preventing a wasted run.
+# Referenced) into main, which matches the path filter below. The `if:` below skips dispatching
+# when the push is itself a draft/* merge. Squash-merge messages don't have a reliably
+# matchable pattern, so for that merge strategy the hard gate in draft-article.yml's prompt is
+# the only guard (it exits immediately, just wasting one run).
 
 on:
   push:

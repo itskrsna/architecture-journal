@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Experience Log</title>
+<style>
+:root{color-scheme:light dark}
+body{font:17px system-ui;margin:0 auto;padding:16px;max-width:640px}
+textarea,input{width:100%;box-sizing:border-box;font:inherit;padding:10px;border-radius:8px;border:1px solid #888}
+textarea{height:45vh;margin:8px 0}
+button{font:inherit;width:100%;padding:14px;border:0;border-radius:8px;background:#0b5fff;color:#fff}
+button:disabled{opacity:.5}
+#out{margin-top:12px;white-space:pre-wrap}
+details{margin-top:16px;font-size:15px}
+</style>
+</head>
+<body>
+<h2>Today's experience</h2>
+<textarea id="t" placeholder="What happened? A decision, incident, debate, surprising number..."></textarea>
+<button id="b">Save</button>
+<div id="out"></div>
+<details id="d">
+  <summary>GitHub token</summary>
+  <p>Fine-grained token for this repository only, with Contents: read and write. It is stored
+  only in this browser.</p>
+  <input id="k" type="password" placeholder="github_pat_..." autocomplete="off">
+</details>
+<script type="module">
+import { saveEntry } from './entry.js';
+const $ = (id) => document.getElementById(id);
+const store = {
+  get: () => { try { return localStorage.getItem('gh') || ''; } catch { return ''; } },
+  set: (v) => { try { localStorage.setItem('gh', v); } catch {} },
+};
+$('k').value = store.get();
+if (!$('k').value) $('d').open = true;
+$('b').onclick = async () => {
+  const token = $('k').value.trim();
+  if (!token) { $('d').open = true; $('out').textContent = 'Add your token first.'; return; }
+  $('b').disabled = true;
+  $('out').textContent = 'Saving...';
+  try {
+    const commit = await saveEntry(token, $('t').value);
+    store.set(token);
+    $('out').textContent = `Saved (commit ${commit}). Drafting starts shortly.`;
+    $('t').value = '';
+  } catch (e) {
+    $('out').textContent = `Error: ${e.message}`;
+  }
+  $('b').disabled = false;
+};
+</script>
+</body>
+</html>
