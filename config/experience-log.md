@@ -29,8 +29,6 @@ picked simply wait their turn and get used whenever they're the best fit, then m
   onto the existing orders service. We split it out; six months later glad we did because the
   reporting side needed a completely different scaling profile.")*
 
-2026-10-23: In SAAS based if we want to connect with onprem with the cloud using http trigger or using event based trigger like service bus . another scenario is how one queue act for all the customers in terms of scalability and reliability
-  
 ## Referenced
 
 *(entries land here once a draft has used them, e.g. "2026-07-20: ... — used in
@@ -101,3 +99,5 @@ const rules: Record<string, FieldRule> = {
 4. Pass `errorMessage={errors[name]}` and `isInvalid={!!errors[name]}` into `CustomFormLabelAndInput` (or your input component) for that field. No changes to the input component are needed — it already supports these two optional props.
 5. Wherever your page currently decides whether Submit/Next is enabled, call `validateAll(currentValues, allValues)` for the ruled fields instead of writing a new bespoke check next to it.
 6. If you need a rule kind that isn't in the table above, reach for `custom` first. Only add a new named preset to `fieldValidation.ts`'s rule registry once the same logic is needed in 2+ places — this keeps the engine's surface small and demand-driven. — used in 2026-08-16-dont-add-a-rule-kind-until-twice
+
+2026-10-23: In SAAS based if we want to connect with onprem with the cloud using http trigger or using event based trigger like service bus . another scenario is how one queue act for all the customers in terms of scalability and reliability — used in 2026-10-23-queue-depth-lies-in-multi-tenant-saas
