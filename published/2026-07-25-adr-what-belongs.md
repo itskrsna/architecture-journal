@@ -1,4 +1,5 @@
 ---
+linkedin_posted: "2026-10-24T02:29:08.452Z"
 devto_url: "https://dev.to/webruster/what-actually-belongs-in-an-architecture-decision-record-and-what-doesnt-3714-temp-slug-4734122"
 published_date: "2026-07-25"
 title: "What actually belongs in an architecture decision record (and what doesn't)"
