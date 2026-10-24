@@ -1,4 +1,5 @@
 ---
+linkedin_posted: "2026-10-24T02:33:43.184Z"
 devto_url: "https://dev.to/webruster/queue-depth-lies-when-one-service-bus-queue-serves-every-customer-11hk-temp-slug-4352121"
 published_date: "2026-10-23"
 title: "Queue depth lies when one Service Bus queue serves every customer"

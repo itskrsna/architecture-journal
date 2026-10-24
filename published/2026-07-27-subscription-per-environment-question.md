@@ -1,4 +1,5 @@
 ---
+linkedin_posted: "2026-10-24T02:33:33.558Z"
 devto_url: "https://dev.to/webruster/subscription-per-environment-was-never-the-real-question-5ape-temp-slug-6100150"
 published_date: "2026-07-27"
 title: "Subscription-per-environment was never the real question"

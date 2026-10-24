@@ -1,4 +1,5 @@
 ---
+linkedin_posted: "2026-10-24T02:33:35.431Z"
 devto_url: "https://dev.to/webruster/what-a-net-core-service-needs-before-its-actually-production-ready-169a-temp-slug-4511407"
 published_date: "2026-07-29"
 title: "What a .NET Core service needs before it's actually production-ready"

@@ -1,4 +1,5 @@
 ---
+linkedin_posted: "2026-10-24T02:33:39.057Z"
 devto_url: "https://dev.to/webruster/my-container-diagram-had-three-boxes-the-actual-pipeline-had-seven-hops-40ee-temp-slug-6655088"
 published_date: "2026-08-11"
 title: "My container diagram had three boxes. The actual pipeline had seven hops."

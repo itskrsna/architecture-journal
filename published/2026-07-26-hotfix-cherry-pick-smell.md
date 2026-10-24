@@ -1,4 +1,5 @@
 ---
+linkedin_posted: "2026-10-24T02:33:31.697Z"
 devto_url: "https://dev.to/webruster/cherry-picking-your-hotfix-twice-is-the-real-pipeline-smell-534o-temp-slug-191212"
 published_date: "2026-07-26"
 title: "Cherry-picking your hotfix twice is the real pipeline smell"
