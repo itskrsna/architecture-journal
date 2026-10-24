@@ -55,7 +55,11 @@ function truncateAtSentence(text: string, max: number): string {
 
 // A `linkedin:` front-matter field wins if the draft provides one; otherwise the hook is the
 // article's opening paragraph, which is already written to stand alone.
-export function buildCommentary(frontMatter: Record<string, unknown>, body: string): string {
+export function buildCommentary(
+  frontMatter: Record<string, unknown>,
+  body: string,
+  { escape = true }: { escape?: boolean } = {}
+): string {
   const custom = typeof frontMatter.linkedin === 'string' ? frontMatter.linkedin.trim() : '';
   const hook = custom || truncateAtSentence(firstParagraph(body), MAX_TEASER_CHARS);
   const tags = Array.isArray(frontMatter.tags) ? (frontMatter.tags as string[]) : [];
@@ -64,7 +68,7 @@ export function buildCommentary(frontMatter: Record<string, unknown>, body: stri
     .map((t) => `#${String(t).replace(/[^A-Za-z0-9]/g, '')}`)
     .filter((t) => t.length > 1)
     .join(' ');
-  return [escapeCommentary(hook), hashtags].filter(Boolean).join('\n\n');
+  return [escape ? escapeCommentary(hook) : hook, hashtags].filter(Boolean).join('\n\n');
 }
 
 export async function postToLinkedIn(opts: {

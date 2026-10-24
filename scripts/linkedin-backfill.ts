@@ -1,25 +1,30 @@
-// Drips already-published articles to LinkedIn as DRAFT posts, one per run, oldest first. Run on
-// a schedule by .github/workflows/linkedin-backfill.yml (a couple of times a week).
+// Adds a paste-ready LinkedIn teaser to social/linkedin-queue.md for every published article that
+// has no entry in the queue yet, whether or not it also has a LinkedIn API draft (those aren't
+// browsable in one place on LinkedIn, so the queue is the single list). Nothing is sent to
+// LinkedIn: the owner copies each teaser into LinkedIn's composer and ticks the box.
 //
-// An article is eligible if its published/ file has no linkedin_posted stamp. The link in the
-// draft is the article's current public dev.to URL if it has been made public (resolved from
-// dev.to by title), else the stored devto_url — which, for an article published while
-// DEVTO_LIVE=false, is a private "temp-slug" URL that changes once the article goes public, so
-// check the link before publishing the LinkedIn draft.
+// Existing queue entries are never rewritten (ticked boxes and hand edits survive); only new
+// entries are appended. The link is the article's public dev.to URL if it has been made public
+// (resolved from dev.to by title), else the stored devto_url, which for an article published
+// while DEVTO_LIVE=false is a private "temp-slug" URL that changes once the article goes public —
+// those entries are flagged.
 //
-// Env: DEVTO_API_KEY, LINKEDIN_ACCESS_TOKEN, LINKEDIN_AUTHOR_URN. Optional: DRY_RUN=true (print,
-// don't post), COOLDOWN_HOURS (default 36: skip if anything was posted to LinkedIn that recently),
-// BACKFILL_ALL=true (draft every unposted article in one run, ignoring the cooldown — safe
-// because drafts publish nothing).
+// Env: DEVTO_API_KEY. Optional: DRY_RUN=true (print, don't write).
 
 import fs from 'fs';
 import path from 'path';
-import { buildCommentary, markPosted, postToLinkedIn, readArticle } from './linkedin';
+import { buildCommentary, readArticle } from './linkedin';
 
 const PUBLISHED_DIR = path.join(__dirname, '..', 'published');
+const QUEUE_PATH = path.join(__dirname, '..', 'social', 'linkedin-queue.md');
 const dryRun = process.env.DRY_RUN === 'true';
-const all = process.env.BACKFILL_ALL === 'true';
-const cooldownMs = Number(process.env.COOLDOWN_HOURS || 36) * 3600 * 1000;
+
+const QUEUE_HEADER = `# LinkedIn queue
+
+Paste each teaser into LinkedIn's post box (the link becomes the preview card), then tick the box.
+Entries are appended by \`scripts/linkedin-backfill.ts\`; existing entries are never rewritten.
+
+`;
 
 async function livePublishedUrls(): Promise<Map<string, string>> {
   const apiKey = process.env.DEVTO_API_KEY;
@@ -33,53 +38,39 @@ async function livePublishedUrls(): Promise<Map<string, string>> {
 }
 
 async function main(): Promise<void> {
-  const files = fs
+  const existing = fs.existsSync(QUEUE_PATH) ? fs.readFileSync(QUEUE_PATH, 'utf8') : '';
+
+  const pending = fs
     .readdirSync(PUBLISHED_DIR)
     .filter((f) => f.endsWith('.md'))
-    .sort();
+    .sort()
+    .map((f) => ({ file: f, reviewId: f.replace(/\.md$/, ''), ...readArticle(path.join(PUBLISHED_DIR, f)) }))
+    .filter((a) => !existing.includes(`<!-- review_id: ${a.reviewId} -->`));
 
-  const articles = files.map((f) => {
-    const filePath = path.join(PUBLISHED_DIR, f);
-    return { file: f, filePath, ...readArticle(filePath) };
-  });
-
-  const lastPosted = Math.max(
-    0,
-    ...articles.map((a) => Date.parse(String(a.data.linkedin_posted || '')) || 0)
-  );
-  if (!all && Date.now() - lastPosted < cooldownMs) {
-    console.log('Posted to LinkedIn recently; skipping this run.');
+  if (pending.length === 0) {
+    console.log('Nothing to add: every article is already in the queue.');
     return;
   }
 
   const live = await livePublishedUrls();
-  const pending = articles.filter((a) => !a.data.linkedin_posted);
-  const batch = all ? pending : pending.slice(0, 1);
-  if (batch.length === 0) {
-    console.log('Nothing eligible: every article already has a LinkedIn draft.');
+  const entries = pending.map((a) => {
+    const title = String(a.data.title);
+    const publicUrl = live.get(title.trim());
+    const url = publicUrl || String(a.data.devto_url || '');
+    const note = publicUrl ? '' : '\n> ⚠ Not public on dev.to yet — this link is a private draft URL and will change when you publish it. Re-check before posting.\n';
+    const teaser = buildCommentary(a.data, a.body, { escape: false });
+    return `<!-- review_id: ${a.reviewId} -->\n## [ ] ${title}\n\n${url}\n${note}\n\`\`\`text\n${teaser}\n\`\`\`\n`;
+  });
+
+  console.log(`Adding ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}:`);
+  pending.forEach((a) => console.log(`  ${a.file}`));
+  if (dryRun) {
+    console.log('DRY_RUN: queue file not written.');
     return;
   }
 
-  for (const next of batch) {
-    const title = String(next.data.title);
-    const url = live.get(title.trim()) || String(next.data.devto_url || '');
-    if (!url) throw new Error(`${next.file} has no devto_url and is not public on dev.to.`);
-    const commentary = buildCommentary(next.data, next.body);
-    console.log(`Candidate: ${next.file}
-${url}
----
-${commentary}
----`);
-
-    if (dryRun) continue;
-
-    const id = await postToLinkedIn({ commentary, url, title });
-    // Stamp right away so a failure on a later article doesn't cause duplicates on re-run.
-    fs.writeFileSync(next.filePath, markPosted(next.raw, new Date().toISOString()));
-    console.log(`Created LinkedIn draft for ${next.file} → ${id}`);
-    await new Promise((r) => setTimeout(r, 1500));
-  }
-  if (dryRun) console.log('DRY_RUN: nothing posted.');
+  fs.mkdirSync(path.dirname(QUEUE_PATH), { recursive: true });
+  fs.writeFileSync(QUEUE_PATH, (existing || QUEUE_HEADER) + '\n' + entries.join('\n'));
 }
 
 main().catch((err: Error) => {

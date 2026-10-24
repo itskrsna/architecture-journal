@@ -1,18 +1,14 @@
-name: Create a LinkedIn draft for a published article
+name: Update LinkedIn queue
 
 on:
   schedule:
-    - cron: '30 4 * * 2,4' # Tue + Thu, 10:00 IST
+    - cron: '30 4 * * 1' # Mondays, 10:00 IST: catches articles whose merge-time draft failed
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Print the candidate post without creating the LinkedIn draft'
+        description: 'List what would be added without writing the queue file'
         type: boolean
         default: true
-      all:
-        description: 'Draft every article not yet on LinkedIn in one run (instead of one)'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -21,7 +17,7 @@ concurrency:
   group: linkedin-backfill
 
 jobs:
-  post-next:
+  update-queue:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,22 +30,18 @@ jobs:
 
       - run: npm ci
 
-      - name: Draft the oldest article not yet on LinkedIn
+      - name: Add missing articles to social/linkedin-queue.md
         env:
           DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
-          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-          LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
-          BACKFILL_ALL: ${{ github.event_name == 'workflow_dispatch' && inputs.all || 'false' }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
         run: npx tsx scripts/linkedin-backfill.ts
 
-      - name: Commit the posted marker
-        if: always()
+      - name: Commit the queue
         run: |
           git config user.name "architecture-journal-bot"
           git config user.email "articles-bot@users.noreply.github.com"
-          git add published
+          git add social
           git diff --cached --quiet && exit 0
-          git commit -m "Mark article as posted to LinkedIn"
+          git commit -m "Update LinkedIn queue"
           git pull --rebase origin main
           git push origin main
