@@ -11,7 +11,21 @@
 import fs from 'fs';
 import matter from 'gray-matter';
 
-const LINKEDIN_VERSION = process.env.LINKEDIN_VERSION || '202506';
+// LinkedIn retires each monthly API version after ~12 months and answers 426 NONEXISTENT_VERSION
+// for a dead one, so rather than hardcode a version we try recent months (newest first) until one
+// is accepted. A 426 is rejected before anything is created, so retrying can't duplicate a post.
+// LINKEDIN_VERSION pins one explicitly.
+function candidateVersions(): string[] {
+  if (process.env.LINKEDIN_VERSION) return [process.env.LINKEDIN_VERSION];
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = 1; i <= 10; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    out.push(`${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}`);
+  }
+  return out;
+}
+let workingVersion: string | undefined;
 const LIFECYCLE_STATE = process.env.LINKEDIN_LIFECYCLE_STATE || 'DRAFT';
 const MAX_TEASER_CHARS = 450;
 
@@ -64,28 +78,38 @@ export async function postToLinkedIn(opts: {
     throw new Error('LINKEDIN_ACCESS_TOKEN and LINKEDIN_AUTHOR_URN must be set.');
   }
 
-  const res = await fetch('https://api.linkedin.com/rest/posts', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'X-Restli-Protocol-Version': '2.0.0',
-      'Linkedin-Version': LINKEDIN_VERSION,
+  const body = JSON.stringify({
+    author,
+    commentary: opts.commentary,
+    visibility: 'PUBLIC',
+    distribution: {
+      feedDistribution: 'MAIN_FEED',
+      targetEntities: [],
+      thirdPartyDistributionChannels: [],
     },
-    body: JSON.stringify({
-      author,
-      commentary: opts.commentary,
-      visibility: 'PUBLIC',
-      distribution: {
-        feedDistribution: 'MAIN_FEED',
-        targetEntities: [],
-        thirdPartyDistributionChannels: [],
-      },
-      content: { article: { source: opts.url, title: opts.title } },
-      lifecycleState: LIFECYCLE_STATE,
-      isReshareDisabledByAuthor: false,
-    }),
+    content: { article: { source: opts.url, title: opts.title } },
+    lifecycleState: LIFECYCLE_STATE,
+    isReshareDisabledByAuthor: false,
   });
+
+  const versions = workingVersion ? [workingVersion] : candidateVersions();
+  let res!: Response;
+  for (const version of versions) {
+    res = await fetch('https://api.linkedin.com/rest/posts', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0',
+        'Linkedin-Version': version,
+      },
+      body,
+    });
+    if (res.status !== 426) {
+      workingVersion = version;
+      break;
+    }
+  }
 
   if (!res.ok) {
     const hint =
