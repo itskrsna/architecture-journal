@@ -36,6 +36,8 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
           DEVTO_LIVE: ${{ vars.DEVTO_LIVE }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
         run: npx tsx scripts/handle-pr-close.ts
 
       - name: Commit reconciliation

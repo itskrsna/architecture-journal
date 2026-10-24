@@ -18,6 +18,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { publishToDevto } from './devto-publish';
+import { buildCommentary, markPosted, postToLinkedIn } from './linkedin';
 
 interface TopicEntry {
   review_id: string;
@@ -104,6 +105,24 @@ async function main(): Promise<void> {
     const publishedPath = path.join(publishedDir, `${reviewId}.md`);
     const publishedDate = new Date().toISOString().slice(0, 10);
     let raw = fs.readFileSync(draftPath, 'utf8');
+
+    // LinkedIn is best-effort and draft-only (see linkedin.ts): a failure (e.g. an expired
+    // token) must not block the commit below, and the scheduled backfill picks up anything
+    // missed here.
+    if (process.env.LINKEDIN_ACCESS_TOKEN) {
+      try {
+        const { content: body } = matter(raw);
+        await postToLinkedIn({
+          commentary: buildCommentary(data, body),
+          url,
+          title: data.title,
+        });
+        raw = markPosted(raw, new Date().toISOString());
+      } catch (err) {
+        console.warn(`LinkedIn post skipped: ${(err as Error).message}`);
+      }
+    }
+
     raw = raw.replace(
       /^---\n/,
       `---\ndevto_url: "${url}"\npublished_date: "${publishedDate}"\n`

@@ -1,2 +1,7 @@
 node_modules/
 config/.env
+
+# local secrets
+scripts/.env.social
+.env.social
+scripts/.linkedin-token

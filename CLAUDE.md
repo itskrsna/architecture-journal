@@ -110,6 +110,16 @@ the fix. Do not remove this gate without addressing that root cause some other w
 - No paid plagiarism/AI-detection API is used, by the owner's choice — originality relies on
   grounding in `experience-log.md`, a banned-phrase self-review, a dedicated AI-detector
   self-check pass, and a lightweight web-search spot-check on distinctive sentences.
-- Hashnode/Substack/Medium/LinkedIn are explicitly out of scope for automation (API access is
+- **LinkedIn** (personal profile, link-card teaser posts — the API can't publish native
+  LinkedIn Articles). Posts are always created as **DRAFT** (`lifecycleState`), independent of
+  `DEVTO_LIVE`; the owner publishes them by hand. New articles get a draft on merge from
+  `handle-pr-close.ts` (best-effort, never blocks the dev.to publish). Older articles drip out
+  via `linkedin-backfill.yml` (Tue/Thu, one per run, oldest first, 36h cooldown). The link is
+  the live dev.to URL if the article is public, else the stored private `temp-slug` URL, which
+  changes once the article goes public — check it before publishing. Handled articles get a
+  `linkedin_posted` front-matter stamp. The OAuth token lasts
+  ~60 days with no refresh: re-run `scripts/linkedin-auth.ts` and update the
+  `LINKEDIN_ACCESS_TOKEN` secret (a 401 turns the backfill run red).
+- Hashnode/Substack/Medium are explicitly out of scope for automation (API access is
   either paid+gated, nonexistent, or closed — see the plan history for the research behind
   this). dev.to is the sole automated target.
