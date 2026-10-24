@@ -5,7 +5,7 @@ Entries are appended by `scripts/linkedin-backfill.ts`; existing entries are nev
 
 
 <!-- review_id: 2026-07-25-adr-what-belongs -->
-## [ ] What actually belongs in an architecture decision record (and what doesn't)
+## [X] What actually belongs in an architecture decision record (and what doesn't)
 
 https://dev.to/webruster/what-actually-belongs-in-an-architecture-decision-record-and-what-doesnt-1ke6
 
@@ -16,7 +16,7 @@ Most architecture decision records fail for the opposite reason people assume. T
 ```
 
 <!-- review_id: 2026-07-26-hotfix-cherry-pick-smell -->
-## [ ] Cherry-picking your hotfix twice is the real pipeline smell
+## [X] Cherry-picking your hotfix twice is the real pipeline smell
 
 https://dev.to/webruster/cherry-picking-your-hotfix-twice-is-the-real-pipeline-smell-1i6h
 
@@ -27,7 +27,7 @@ We had a gitflow pipeline that looked clean on paper: develop feeds a release br
 ```
 
 <!-- review_id: 2026-07-27-subscription-per-environment-question -->
-## [ ] Subscription-per-environment was never the real question
+## [X] Subscription-per-environment was never the real question
 
 https://dev.to/webruster/subscription-per-environment-was-never-the-real-question-3che
 
@@ -38,7 +38,7 @@ Every landing zone conversation eventually lands on the same fork: subscription-
 ```
 
 <!-- review_id: 2026-07-29-net-core-production-ready -->
-## [ ] What a .NET Core service needs before it's actually production-ready
+## [X] What a .NET Core service needs before it's actually production-ready
 
 https://dev.to/webruster/what-a-net-core-service-needs-before-its-actually-production-ready-42k0
 
@@ -49,7 +49,7 @@ Health checks. Structured logging. Retry policies with jitter. Everyone who writ
 ```
 
 <!-- review_id: 2026-07-30-design-review-naming-collision -->
-## [ ] The one design-review question that would have caught our APIM naming collision
+## [X] The one design-review question that would have caught our APIM naming collision
 
 https://dev.to/webruster/the-one-design-review-question-that-would-have-caught-our-apim-naming-collision-4eho
 
@@ -60,7 +60,7 @@ https://dev.to/webruster/the-one-design-review-question-that-would-have-caught-o
 ```
 
 <!-- review_id: 2026-08-11-c4-diagram-seven-hops -->
-## [ ] My container diagram had three boxes. The actual pipeline had seven hops.
+## [X] My container diagram had three boxes. The actual pipeline had seven hops.
 
 https://dev.to/webruster/my-container-diagram-had-three-boxes-the-actual-pipeline-had-seven-hops-35k5
 
@@ -75,8 +75,6 @@ Three boxes. That's what our C4 container diagram showed for the EPCIS batch upl
 
 https://dev.to/webruster/dont-add-a-new-rule-kind-until-youve-written-the-same-check-twice-3jjj-temp-slug-992129
 
-> ⚠ Not public on dev.to yet — this link is a private draft URL and will change when you publish it. Re-check before posting.
-
 ```text
 Someone asked me last week to stop users typing backticks into a product-name field. Fine. Then someone asked for the same thing on a host-address field, then a description field. Three tickets, same shape, three weeks apart. That's the moment a form-validation ask stops being a bug fix and starts being a design question: do I bolt a fourth one-off regex onto a fourth page, or do I finally admit this is a pattern and give it a name?
 
@@ -87,8 +85,6 @@ Someone asked me last week to stop users typing backticks into a product-name fi
 ## [ ] Queue depth lies when one Service Bus queue serves every customer
 
 https://dev.to/webruster/queue-depth-lies-when-one-service-bus-queue-serves-every-customer-11hk-temp-slug-4352121
-
-> ⚠ Not public on dev.to yet — this link is a private draft URL and will change when you publish it. Re-check before posting.
 
 ```text
 Here's the design question that keeps coming back on our SaaS platform: one queue, shared by every customer, sitting between the cloud product and whatever the customer runs on-prem. Is that one queue enough? Scalable enough, reliable enough? I think the answer is yes for a surprisingly long time. What I don't think survives is the dashboard most teams put on top of it.
